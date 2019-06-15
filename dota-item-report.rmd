@@ -30,7 +30,7 @@ setwd('C:/Users/Thomas/Datasets & Projects/DOTA-analysis')
 ## Motivation
 The purpose of this document is to serve as an example of basic coding, analysis, and communication skills. R is my tool of choice for deriving a 'story' from raw data, and the RMarkdown format allows direct translation of a script to a more readable format.
 
-Defence of the Ancients 2 is a team-based, real-time strategy game played online, colloqially referred to as Dota ([What's a Dota?](https://dota2.gamepedia.com/Dota_2#Basic_premise)). The strategic element requires players to manage their various finite resources to achieve the objective before the other team does. One of the more important resources is 'gold' which is collected and spent in various ways thoughout a match, and a primary use of gold is to buy 'items' that strengthen your character and team relative to the other team.
+Defence of the Ancients 2 is a team-based, real-time strategy game played online, colloquially referred to as Dota ([What's a Dota?](https://dota2.gamepedia.com/Dota_2#Basic_premise)). The strategic element requires players to manage their various finite resources to achieve the objective before the other team does. One of the more important resources is 'gold' which is collected and spent in various ways thoughout a match, and a primary use of gold is to buy 'items' that strengthen your character and team relative to the other team.
 
 This was originally a personal project to create a data-driven guide for what items one should buy in an average game of Dota, in order to maximize one's opportunity to win. My analysis seeks to identify items associated win-rates that deviate from the average, and determine *why* they under/over-perform using both data and contextual knowledge about the game.
 
@@ -164,13 +164,14 @@ global.matched$Delta <- global.matched[, WinRate-Model]
 global.matched$wResidual <- global.matched[,scale(Delta*MatchesPlayed)]
 gplt <- ggplot(data=global.matched)
 
-# 
+# additional information for visualization
 plot.domain <- seq(0,8000, len=41)
 global.model <- predict.glm(global.glm, type='response', newdata=data.frame(Price=plot.domain))
 gdata <- data.frame(plot.domain, global.model)
 baseline <- global.matched[,sum(MatchesPlayed*WinRate) / sum(MatchesPlayed)]
 SE <- sd(global.matched$Delta)
 
+# construct the visual
 gplt+labs(title='Success Rate with respect to Item Price', subtitle='Global Trend - All Heroes')+
   xlab('Price')+ ylab('Win Rate')+
   scale_y_continuous(limits=c(0,1))+
@@ -179,6 +180,7 @@ gplt+labs(title='Success Rate with respect to Item Price', subtitle='Global Tren
   geom_line(data=gdata, aes(x=plot.domain, y=global.model), colour='black', size=1.5)+
   geom_point(mapping=aes(x=Price, y=WinRate), colour='black')
 
+# generate interactive table
 datatable(filter='top', rownames=FALSE, escape=TRUE, options=list(order=list(5,'desc')),
           data=global.matched[,.(Item,Price,UseRate=percent(UseRate), WinRate=percent(WinRate),
                                  Model=percent(Model), Delta=percent(Delta), `Weighted Residual`=round(wResidual,2))])
@@ -249,19 +251,21 @@ carry.matched <- clean(carry.tbl[,c(2,3,4)], item.prices)
 In order to identify items that under/over-perform, it is necessary to have some benchmark to measure them against. That is the purpose of regression modelling in this project, not to predict performance or to perfectly explain trends, just to generate a baseline level of performance that controls for the most obvious trends. While only a few notable items will be highlighted in the following plots and analysis, an interactive table of the observed and modelled data for every item is presented below.
 
 ```{r}
+# modelling and error analysis
 carry.glm <- glm(data=carry.matched, family=binomial(link='logit'),
                   formula=WinRate~Price+I(Price^2), weights=MatchesPlayed)
 carry.matched$Model <- round(predict.glm(carry.glm, type='response', newdata=data.frame(Price=carry.matched$Price)), 4)
 carry.matched$Delta <- carry.matched[, WinRate-Model]
 carry.matched$wResidual <- carry.matched[,scale(Delta*MatchesPlayed)]
 
-
+# additional information for visualization
 cplt <- ggplot(data=carry.matched)
 carry.model <- predict.glm(carry.glm, type='response', newdata=data.frame(Price=plot.domain))
 cdata <- data.frame(plot.domain, carry.model)
 baseline <- carry.matched[,sum(MatchesPlayed*WinRate) / sum(MatchesPlayed)]
 SE <- sd(carry.matched$Delta)
 
+# construct the visual
 cplt+labs(title='Success Rate with respect to Item Price', subtitle='Carry hero - Phantom Assassin')+
   xlab('Price')+ ylab('Win Rate')+
   scale_y_continuous(limits=c(0,1))+
@@ -270,6 +274,7 @@ cplt+labs(title='Success Rate with respect to Item Price', subtitle='Carry hero 
   geom_line(data=cdata, aes(x=plot.domain, y=carry.model), colour='black', size=1.5)+
   geom_point(mapping=aes(x=Price, y=WinRate), colour='black')
 
+# generate interactive table
 datatable(filter='top', rownames=FALSE, escape=TRUE, options=list(order=list(5,'desc')),
           data=carry.matched[,.(Item,Price,UseRate=percent(UseRate), WinRate=percent(WinRate),
                                  Model=percent(Model), Delta=percent(Delta), `Weighted Residual`=round(wResidual,2))])
@@ -329,20 +334,21 @@ support.matched <- clean(support.tbl[,c(2,3,4)], item.prices)
 In order to identify items that under/over-perform, it is necessary to have some benchmark to measure them against. That is the purpose of regression modelling in this project, not to predict performance or to perfectly explain trends, just to generate a baseline level of performance that controls for the most obvious trends. While only a few notable items will be highlighted in the following plots and analysis, an interactive table of the observed and modelled data for every item is presented below.
 
 ```{r}
+# modelling and error analysis
 support.glm <- glm(data=support.matched, family=binomial(link='logit'),
                   formula=WinRate~Price+I(Price^2), weights=MatchesPlayed)
 support.matched$Model <- round(predict.glm(support.glm, type='response', newdata=data.frame(Price=support.matched$Price)), 4)
 support.matched$Delta <- support.matched[, WinRate-Model]
 support.matched$wResidual <- support.matched[,scale(Delta*MatchesPlayed)]
 
-#summary(support.glm)
-
+# additional information for visualization
 splt <- ggplot(data=support.matched)
 support.model <- predict.glm(support.glm, type='response', newdata=data.frame(Price=plot.domain))
 sdata <- data.frame(plot.domain, support.model)
 baseline <- support.matched[,sum(MatchesPlayed*WinRate) / sum(MatchesPlayed)]
 SE <- sd(support.matched$Delta)
 
+# construct the visual
 cplt+labs(title='Success Rate with respect to Item Price', subtitle='Support hero - Crystal Maiden')+
   xlab('Price')+ ylab('Win Rate')+
   scale_y_continuous(limits=c(0,1))+
@@ -351,6 +357,7 @@ cplt+labs(title='Success Rate with respect to Item Price', subtitle='Support her
   geom_line(data=cdata, aes(x=plot.domain, y=support.model), colour='black', size=1.5)+
   geom_point(mapping=aes(x=Price, y=WinRate), colour='black')
 
+# generate interactive table
 datatable(filter='top', rownames=FALSE, escape=TRUE, options=list(order=list(5,'desc')),
           data=support.matched[,.(Item,Price,UseRate=percent(UseRate), WinRate=percent(WinRate),
                                  Model=percent(Model), Delta=percent(Delta), `Weighted Residual`=round(wResidual,2))])
@@ -360,7 +367,7 @@ datatable(filter='top', rownames=FALSE, escape=TRUE, options=list(order=list(5,'
 
 Now that there is a model for price-adjusted average performance, it is worth noting which items represent significant departures and identifying the other possible factors at play. Ultimately the goal is not just to identify outliers, but to extract strategic advice that is justified by those peculiarities in the data.
 
-In stark contrast to the carry hero, this plot shows a strong preference for low-cost items, and more severe diminishing returns from expensive items. It may not be that more expensive items aren't useful to supports, so much as they represent a high opportunity cost relative to other ways of spending time and resources. Because most of a support's time *should* be spent enabling their team as the others collect gold, they generally get less to work with for themselves. In this context, it seems advisable to prioritize less-expensive and more cost-efficient items.
+In stark contrast to the carry hero, this plot shows a strong preference for moderate and low-cost items, and more severe diminishing returns from expensive items. It may not be that more expensive items aren't useful to supports, so much as they represent a high opportunity cost relative to other ways of spending time and resources. Because most of a support's time *should* be spent enabling their team as the others collect gold, they generally get less to work with for themselves. In this context, it seems advisable to prioritize less-expensive and more cost-efficient items.
 
 ```{r}
 high.value <- (support.matched$Delta >= SE)
@@ -392,9 +399,9 @@ splt+labs(title='Relative Success Rate controlling for Item Price', subtitle='Su
   geom_label_repel(data=support.matched[tails,], aes(y=wResidual, x=Price, label=Item))
 ```
 
-## Conclusions
+## Results
 
-It is only feasible to examine a very select subset of the data that has been processed in any detail. A few of the most extreme data points from the above figures
+It is only feasible to examine a very select subset of the data that has been processed in any detail. A few of the most extreme data points from the above figures have been chosen for closer inspection in hopes of gaining insight into some of the best and worst item choices.
 
 **Positive Outliers**
 
