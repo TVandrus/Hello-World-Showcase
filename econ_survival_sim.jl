@@ -4,7 +4,6 @@
 simulate survival distribution wrt liquidity/solvency risks
 where available assets available to cover obligations are affected by deterministic and stochastic changes
 """
-
 using Statistics
 using Base.Iterators, Base.Threads
 
@@ -27,7 +26,6 @@ function invest_risky(assets, cost)::Integer
     end
 end
 
-
 # specify initial state
 init_A = (
     n_periods = 52, 
@@ -41,7 +39,6 @@ init_A = (
     invest_fn = invest_risky
 )
  
-
 # simulate_run
 function simulate_run(init_spec)
     n_p = get(init_spec, :n_periods, 52)
@@ -50,7 +47,7 @@ function simulate_run(init_spec)
     sizehint!(h, n_p)
     s = true
     # iterate process until insufficient assets, or specified periods elapsed
-    for p = range(1, n_p)
+    for p = range(1, n_p, step=1)
         if p % init_spec[:income_freq] == 0
             b += init_spec[:income_amt]
         end
@@ -58,7 +55,7 @@ function simulate_run(init_spec)
             b -= init_spec[:obligation_amt]
         end
         if p % init_spec[:invest_freq] == 0
-            b += invest_risky(assets=b, cost=20)
+            b += invest_risky(b, init_spec[:invest_cost])
         end
         
         push!(h, (t=p, c=b))
@@ -67,7 +64,7 @@ function simulate_run(init_spec)
             break
         end
     end
-    return (success=success, elapsed=length(history)-1, balance=b, history=h)
+    return (success=success, elapsed=length(h)-1, balance=b, history=h)
 end
 
 # simulate_all_runs
@@ -76,7 +73,7 @@ function simulate_all_runs(init_spec, n_runs=1000)
     sizehint!(results, n_runs)
     records = []
     sizehint!(records, n_runs)
-    @threads for i in range(1, n_runs)
+    @threads for i in range(1, n_runs, step=1)
         trial = simulate_run(init_spec)
         push!(results, (id=i, success=trial[:success], elapsed=trial[:elapsed]))
         push!(records, trial[:history])
@@ -86,16 +83,16 @@ end
 
 # analyse results
 
-sim_A = simulate_all_runs(init_A)
-outcomes_A = sim_A[1]
-details_A = sim_A[2]
+sim_A = simulate_all_runs(init_A); 
+outcomes_A = sim_A[1]; 
+details_A = sim_A[2]; 
 
 
 # n trials
 length(outcomes_A)
 
 # rate of survival to end of trial
-mean(outcomes_A.[:success])
+mean(outcomes_A.success)
 
 # avg ending assets of survivors
 # avg time to fail 
