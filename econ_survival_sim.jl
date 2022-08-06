@@ -18,7 +18,7 @@ end
 
 function invest_risky(assets, cost)::Integer
     # favourable, but uncertain returns
-    outcomes = [-cost, cost, cost]
+    outcomes = [-cost, -0.5*cost, 0, cost, cost]
     if assets < cost
         return 0
     else
@@ -26,19 +26,6 @@ function invest_risky(assets, cost)::Integer
     end
 end
 
-# specify initial state
-init_A = (
-    n_periods = 52, 
-    cash_init = 100, 
-    income_amt = 10, 
-    income_freq = 1, 
-    obligation_amt = 40, 
-    obligation_freq = 4,
-    invest_freq = 1, 
-    invest_cost = 20, 
-    invest_fn = invest_risky
-)
- 
 # simulate_run
 function simulate_run(init_spec)
     n_p = get(init_spec, :n_periods, 52)
@@ -60,11 +47,11 @@ function simulate_run(init_spec)
         
         push!(h, (t=p, c=b))
         if (b <= 0) 
-            success = false
+            s = false
             break
         end
     end
-    return (success=success, elapsed=length(h)-1, balance=b, history=h)
+    return (success=s, elapsed=length(h)-1, balance=b, history=h)
 end
 
 # simulate_all_runs
@@ -81,20 +68,80 @@ function simulate_all_runs(init_spec, n_runs=1000)
     return (results, collect(Iterators.flatten(records)))
 end
 
+
+# specify initial state
+init_A = (
+    n_periods = 52, 
+    cash_init = 100, 
+    income_amt = 10, 
+    income_freq = 1, 
+    obligation_amt = 40, 
+    obligation_freq = 4,
+    invest_freq = 2, 
+    invest_cost = 20, 
+    invest_fn = invest_risky
+)
+ 
+init_B = (
+    n_periods = 52, 
+    cash_init = 50, 
+    income_amt = 10, 
+    income_freq = 1, 
+    obligation_amt = 40, 
+    obligation_freq = 4,
+    invest_freq = 2, 
+    invest_cost = 20, 
+    invest_fn = invest_risky
+)
+init_C = (
+    n_periods = 52, 
+    cash_init = 50, 
+    income_amt = 10, 
+    income_freq = 1, 
+    obligation_amt = 40, 
+    obligation_freq = 4,
+    invest_freq = 3, 
+    invest_cost = 20, 
+    invest_fn = invest_risky
+)
+
+
 # analyse results
+sim = Dict()
 
-sim_A = simulate_all_runs(init_A); 
-outcomes_A = sim_A[1]; 
-details_A = sim_A[2]; 
-
+let run = simulate_all_runs(init_A); 
+    sim[:A] = (
+        outcomes = run[1],  
+        details = run[2])
+end ;
+let run = simulate_all_runs(init_B); 
+    sim[:B] = (
+        outcomes = run[1],  
+        details = run[2])
+end ;
+let run = simulate_all_runs(init_C); 
+    sim[:C] = (
+        outcomes = run[1],  
+        details = run[2])
+end ;
 
 # n trials
-length(outcomes_A)
+length(sim[:A].outcomes)
+
+# investment characteristics for the trials
+returns = [invest_risky(100, 100) for _ in 1:1_000_000]; 
+mean(returns)
+std(returns)
+quantile(returns, (0 : 0.1 : 1))
 
 # rate of survival to end of trial
-mean(outcomes_A.success)
+mean([o.success for o in sim[:A].outcomes]) # start w 100, invest every 2nd week
+mean([o.success for o in sim[:B].outcomes]) # start w 50, invest every 2nd week
+mean([o.success for o in sim[:C].outcomes]) # start w 50, invest every 3rd week
+
 
 # avg ending assets of survivors
+
 # avg time to fail 
 
 
