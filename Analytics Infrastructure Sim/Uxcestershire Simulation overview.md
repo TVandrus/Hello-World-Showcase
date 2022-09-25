@@ -22,13 +22,13 @@ Purpose: tech showcase to test interoperability of many elements of a modern dat
 Each simulated process can yield a full data life-cycle 
 
 Ideas: 
+    - take a census 
     - industrial production (UXDM - Uxcestershire Data Mine) 
     - retail sales (UXFSI - Uxcestershire Financial Services Inc.) 
     - transit (TUX - Transit Uxcestershire) 
     - utilities/infrastructure 
     - economy/market 
     - weather 
-
 
 ## dbt data model to produce consumable extracts
 
@@ -37,12 +37,14 @@ Ideas:
 - views for consumption/analytics 
 
 Some underlying/reusable entities inherent to Uxcestershire: 
-    - inhabitants 
+    - inhabitants (name, age, occupation, residential address, family)
     - addresses (unit, street#, street name, postal code, district) 
-    - calendar (360-days per year, 30-days per month) 
+    - calendar (360-days per year, 30-days per month, as text yyyymmdd or serial since 20100101) 
     - activities (education, occupation, services, leisure) 
 
 
 ## Visualize extracts with Excel/Tableau/Pluto notebook?
 
 Reveal or obfuscate the generating distributions behind process outcomes
+- trends
+- controlled experiments 
