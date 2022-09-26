@@ -1,15 +1,22 @@
 # Uxcestershire Simulation 
-naming credit: David Rudlin
 
+## Premise: 
 
+Welcome to the made-up municipality of Uxcestershire (naming credit: David Rudlin), a coherent narrative within which to contextualize data and processes. 
 
 Purpose: tech showcase to test interoperability of many elements of a modern data environment. Sufficient scale that modularity, organisation, and perhaps performance considerations will be relevant to scalability 
 
 
-## Persistent data written to and retrieved from PostgreSQL instance 
+## Components: 
+
+The goal is to shoehorn many diverse tools into the process to build complexity, without creating undue complications.
+
+### Persistent data written to and retrieved from data storage instance of choice 
+
+- locally-hosted PostgreSQL server instance 
 
 
-## dagster deployment to orchestrate/execute the pipeline from setup to consumption
+### dagster deployment to orchestrate/execute the pipeline from setup to consumption
 
 - setup/clean-slate job (wipe database, load seed data)
 - graph to read-simulate-write an iteration of one aspect 
@@ -17,7 +24,7 @@ Purpose: tech showcase to test interoperability of many elements of a modern dat
 - job to run dbt for output 
 
 
-## Simulation logic written in Julia scripts, given state returns next state
+### Simulation logic written in Julia scripts, given state returns next state
 
 Each simulated process can yield a full data life-cycle 
 
@@ -30,7 +37,7 @@ Ideas:
     - economy/market 
     - weather 
 
-## dbt data model to produce consumable extracts
+### dbt data model to produce consumable extracts
 
 - seed data used to populate simulation entities
 - data model to represent entities and states used by a simulation aspect 
@@ -43,7 +50,7 @@ Some underlying/reusable entities inherent to Uxcestershire:
     - activities (education, occupation, services, leisure) 
 
 
-## Visualize extracts with Excel/Tableau/Pluto notebook?
+### Visualize extracts with Excel/Tableau/Pluto notebook?
 
 Reveal or obfuscate the generating distributions behind process outcomes
 - trends

@@ -1,0 +1,5 @@
+dbt_logs/
+dbt_compiled/
+dbt_packages/
+config_private.*
+dagster_artifacts/

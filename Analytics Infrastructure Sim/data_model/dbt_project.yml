@@ -1,0 +1,35 @@
+
+# Name your project! Project names should contain only lowercase characters
+# and underscores. A good package name should reflect your organization's
+# name or the intended use of these models
+name: 'data_model'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'dbt_pg'
+# C:\Users\tvand\.dbt\profiles.yml 
+
+# These configurations specify where dbt should look for different types of files.
+seed-paths: [seed_data]
+
+model-paths: [models]
+models:
+  data_model: 
+    calc: 
+      +materialized: table
+    out: 
+      +materialized: view 
+
+snapshot-paths: [snapshots]
+
+analysis-paths: [sql_ad_hoc]
+macro-paths: [macros]
+test-paths: [macros/tests]
+
+log-path: dbt_logs
+target-path: dbt_compiled  # directory which will store compiled SQL files
+clean-targets:         # directories to be removed by `dbt clean`
+  - dbt_compiled
+  - dbt_logs 
+  #- dbt_packages

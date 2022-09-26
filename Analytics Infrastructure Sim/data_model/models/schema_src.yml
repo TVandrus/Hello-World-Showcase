@@ -1,0 +1,19 @@
+
+version: 2
+
+sources:
+  - name: src # required
+    schema: sim_src
+    tags: 
+      - src 
+    description: <markdown_string>
+    database: development_db
+    tables:
+      - name: aw_address
+        description: <markdown_string>
+        tags: 
+          - AdventureWorks 
+      - name: aw_person
+        description: <markdown_string>
+        tags: 
+          - AdventureWorks 

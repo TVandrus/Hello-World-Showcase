@@ -1,0 +1,66 @@
+
+# assumed environment var DAGSTER_HOME is set to ./deployed_instance/
+
+telemetry:
+  enabled: true 
+
+storage:
+  postgres:
+    postgres_db:
+      hostname: localhost
+      db_name: development_db
+      port: 5432
+      username: dev_user
+      password: dev_user
+
+run_launcher:
+  module: dagster.core.launcher
+  class: DefaultRunLauncher
+
+# Since DefaultRunCoordinator is the default option, omitting the `run_coordinator` key will also suffice, but if you would like to set it explicitly
+run_coordinator:
+  module: dagster.core.run_coordinator
+  class: DefaultRunCoordinator
+
+#  There are a few ways to configure the optional QueuedRunCoordinator to control resource usage and prioritisation 
+  # run_coordinator:
+  #   module: dagster.core.run_coordinator
+  #   class: QueuedRunCoordinator
+  #   config:
+  #     max_concurrent_runs: 3 
+
+sensors:
+  use_threads: false # set true to apply num_workers config 
+  num_workers: 2 
+
+# set the directory that the LocalComputeLogManager writes stdout & stderr logs to
+compute_logs:
+  module: dagster.core.storage.local_compute_log_manager
+  class: LocalComputeLogManager
+  config:
+    base_dir: "./dagster_artifacts/" 
+
+
+local_artifact_storage:
+  module: dagster.core.storage.root
+  class: LocalArtifactStorage
+  config:
+    base_dir: "./dagster_artifacts/" 
+
+# Configures how long Dagster keeps sensor / schedule tick data
+retention:
+  schedule:
+    purge_after_days: 14 # sets retention policy for schedule ticks of all types
+  sensor:
+    purge_after_days:
+      skipped: 7
+      failure: 7
+      success: 7 
+
+
+
+
+# Configures how long Dagster waits for repositories to load before timing out.
+# code_servers:
+#   local_startup_timeout: 120 
+
