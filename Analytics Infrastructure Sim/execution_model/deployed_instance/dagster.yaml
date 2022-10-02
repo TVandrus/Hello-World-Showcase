@@ -6,6 +6,8 @@ telemetry:
 
 storage:
   postgres:
+    should_autocreate_tables: False
+    #postgres_url: "postgresql://dev_user:dev_user@localhost:5432/development_db"
     postgres_db:
       hostname: localhost
       db_name: development_db

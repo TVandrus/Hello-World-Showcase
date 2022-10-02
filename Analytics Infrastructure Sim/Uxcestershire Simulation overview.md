@@ -9,7 +9,7 @@ Purpose: tech showcase to test interoperability of many elements of a modern dat
 
 ## Components: 
 
-The goal is to shoehorn many diverse tools into the process to build complexity, without creating undue complications.
+The goal is to shoehorn several diverse tools into the process to build complexity, without creating undue complications.
 
 ### Persistent data written to and retrieved from data storage instance of choice 
 
