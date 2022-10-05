@@ -1,9 +1,6 @@
 
 """
-$pip = "C:\Users\tvand\Documents\Python\Python_3-9\Scripts\pip.exe"
-$python = "C:\Users\tvand\Documents\Python\Python_3-9\python.exe"
-cls
-.$python 
+
 """
 
 import pandas as pd

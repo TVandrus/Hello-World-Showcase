@@ -34,3 +34,12 @@ https://docs.python.org/3/
 https://docs.dagster.io/deployment/overview 
 https://docs.getdbt.com/reference/dbt_project.yml
 
+
+# PowerShell Shortcuts
+
+```powershell
+$pip = "S:/Python/Python_3_10/Scripts/pip.exe" 
+$python = "S:/Python/Python_3_10/python.exe"; cls; .$python; 
+$dbt = "S:/Python/Python_3_10/Scripts/dbt.exe" 
+$dagit = "S:/Python/Python_3_10/Scripts/dagit.exe" 
+```

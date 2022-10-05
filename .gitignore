@@ -1,1 +1,6 @@
+__pycache__/
+dagster_artifacts/
+!/dagster.yaml
+
 setup.ps1
+test_cargo/

@@ -1,19 +1,14 @@
 
-# assumed environment var DAGSTER_HOME is set to ./deployed_instance/
+# assumed environment var DAGSTER_HOME is set to ./test_instance/
 
 telemetry:
-  enabled: true 
+  enabled: false 
 
+# default SQLite storage
 storage:
-  postgres:
-    should_autocreate_tables: False
-    #postgres_url: "postgresql://dev_user:dev_user@localhost:5432/development_db"
-    postgres_db:
-      hostname: localhost
-      db_name: development_db
-      port: 5432
-      username: dev_user
-      password: dev_user
+  sqlite:
+    base_dir: "./test_instance/dagster_artifacts/" 
+
 
 run_launcher:
   module: dagster.core.launcher
@@ -32,7 +27,7 @@ run_coordinator:
   #     max_concurrent_runs: 3 
 
 sensors:
-  use_threads: false # set true to apply num_workers config 
+  use_threads: true # set true to apply num_workers config 
   num_workers: 2 
 
 # set the directory that the LocalComputeLogManager writes stdout & stderr logs to
@@ -40,14 +35,14 @@ compute_logs:
   module: dagster.core.storage.local_compute_log_manager
   class: LocalComputeLogManager
   config:
-    base_dir: "./deployed_instance/dagster_artifacts/" 
+    base_dir: "./test_instance/dagster_artifacts/" 
 
 
 local_artifact_storage:
   module: dagster.core.storage.root
   class: LocalArtifactStorage
   config:
-    base_dir: "./deployed_instance/dagster_artifacts/" 
+    base_dir: "./test_instance/dagster_artifacts/" 
 
 # Configures how long Dagster keeps sensor / schedule tick data
 retention:
