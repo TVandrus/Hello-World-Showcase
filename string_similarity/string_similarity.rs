@@ -1,5 +1,4 @@
 
-
 // another example implementation of the original
 // https://stackoverflow.com/questions/19123506/jaro-winkler-distance-algorithm-in-c-sharp/19165108//19165108
 
@@ -10,68 +9,82 @@ Loosely based on Jaro similarity: https://en.wikipedia.org/wiki/Jaro–Winkler_d
 Empirically, random/independent strings ~0.40 on average, similar strings >0.85
 */
 
-fn string_compare(s1: str, s2: str, verbose: bool=false,
-                        strip: Array{String}=[" "], keep_case: bool=false, 
-                        ignore_short: u16=4) -> f64 {
+fn main() {
+    let s1_default: &str = "1313-123 Westcourt Place N2L 1B3";
+    let s2_default: &str = "Unit 1313 123 Westcourt Pl. N2L1B3";
+    let strip_default: Vec<&str> = vec![" "];
+    let keep_case_default: bool = false;
+    let ignore_short_default: u64 = 4;
+    let verbose_default: bool = false; 
+    string_compare(s1_default, s2_default, strip_default, keep_case_default, ignore_short_default, verbose_default)
+}
 
+fn string_compare(s1: &str, s2: &str, strip: Vec<&str>, 
+        keep_case: bool, ignore_short: u16, verbose: bool) -> f64 {
     // Pre-Processing
     // remove spaces by default, allows arbitrary strings to be stripped away
-    if length(strip) > 0 {
+    let mut process_1: String = s1.to_string(); 
+    let mut process_2: String = s2.to_string(); 
+    if strip.len() > 0_usize {
         for s in strip.iter() {
-            s1, s2 = replace(s1, s => ""), replace(s2, s => "")
+            process_1 = process_1.replace(s, ""); 
+            process_2 = process_2.replace(s, ""); 
+            debug!(("{}\n{}", process_1, process_2); 
         }
     }
-    l1::Int, l2::Int = length(s1), length(s2)
-    if l1 < l2 {// guarantee s1 is longest string
-        s1, s2 = s2, s1
-        l1, l2 = l2, l1
-    }
     if !keep_case {// case insensitive by default
-        s1, s2 = uppercase(s1), uppercase(s2)
+        process_1 = process_1.to_uppercase();
+        process_2 = process_2.to_uppercase();
     }
+
+    let is_ordered: bool = process_1.len() >= process_2.len(); 
+    // guarantee s1 is longest string
+    let s1 = if is_ordered {&process_1} else {&process_2} ;
+    let s2 = if is_ordered {&process_2} else {&process_1} ;
+    let l1: u64 = s1.len(); 
+    let l2: u64 = s2.len(); 
+
     if verbose {// display processed strings
-        println("$l1 - $s1")
-        println("$l2 - $s2")
+        debug!(("{} - {}", l1, s1); 
+        debug!(("{} - {}", l2, s2);  
     }
 
     // short circuit if above processing makes an exact match
-    if isequal(s1, s2) {
-        return 1
-    }
+    if s1 == s2 {
+        if verbose {debug!(("exact match")};
+        return 1 ;
+    } 
     
     if (l2 == 0) || (l2 <= ignore_short) {
         // arbitrary decision that fuzzy matching of 'short' strings
         //   is not informative
-        if verbose {
-            println("short string")
-        }
+        if verbose {debug!(("short string")}; 
         // already tested for exact matches
-        return 0
+        return 0;
     }
 
     // matching-window size
     //   original uses (max length ÷ 2) - 1
     //mdist = (l1 ÷ 2) - 1
     //mdist = l1 ÷ 4 // bidirectional window needs to be smaller
-    mdist::Int = floor(Int, sqrt(l1))
-    if verbose
-        println("match dist - $mdist")
-    }
+    let mdist = f64::floor(f64::sqrt(l1 as f64)) as i64;
+    if verbose {debug!("match dist - {mdist}")};
     
     // order-sensitive match index of each character such that
     //   (goose, pot) has only one match [2], [2] but
     //   (goose, oolong) has two matches [1,2], [2,3]
-    m1::Array{Int}, m2::Array{Int} = [], []
+    m1: Vec<u64> = vec![];
+    m2: Vec<u64> = vec![]; 
     // m1 needed only for debugging
 
-    for i::Int in 1:l1
-        window_start::Int = max(1, i-mdist)
+    for i:u64 in 1..l1 {
+        window_start:u64 = max(1, i-mdist)
         window_end::Int = min(l2, i+mdist)
-        if window_start > l2
+        if window_start > l2 {
             break
         }
-        for j::Int in setdiff(window_start:window_end, m2)
-            if s1[i] == s2[j]
+        for j::Int in setdiff(window_start:window_end, m2) {
+            if s1[i] == s2[j] {
                 push!(m1, i) 
                 push!(m2, j)
                 break
@@ -85,7 +98,7 @@ fn string_compare(s1: str, s2: str, verbose: bool=false,
 
     matches::Int = length(m2)
     if verbose
-        println("matches - $matches")
+        debug!(("matches - $matches")
     }
 
     if matches == 0
@@ -95,18 +108,13 @@ fn string_compare(s1: str, s2: str, verbose: bool=false,
     else
         transposes = sum([!isless(m2[k-1], m2[k]) for k in 2:matches])
         if verbose
-            println("transposes - $transposes")
+            debug!(("transposes - $transposes")
         }
         return round((matches / l1 + matches / l2 +
                 (matches - transposes) / matches ) / 3, digits=3)
     }    
 }
 
-fn main() {
-    s1 = "1313-123 Westcourt Place N2L 1B3"
-    s2 = "Unit 1313 123 Westcourt Pl. N2L1B3"
-    string_compare(s1, s2)
-}
 /* basic scenario testing
 s1 = "martha"
 s2 = "marhta"
@@ -124,25 +132,4 @@ s1 = "123 Falconridge Cres Kitchener ON N2K1B3"
 s2 = "123 Falconridge Crescent Kitchener ON N2K1B3"
 
 string_compare(s1, s2, verbose=true) 
-*/
-
-/* performance testing
-using Random, StatsBase, Base.Threads
-
-string_compare("test", "string", verbose=true)
-
-n = 100000
-l = 100
-results = zeros(n)
-@time begin
-    @threads for i in 1:n
-        results[i] = string_compare(randstring("abcdefghijklmnopqrstuvwxyz0123456789 ", l),
-                                    randstring("abcdefghijklmnopqrstuvwxyz0123456789 ", l))
-    }
-}
-summarystats(results)
-
-// performance test: 100k comparisons of random 100-char strings
-// original: 10s, 257M alloc, 15 GiB, 40% gc
-// type annotated: 9s 150M alloc, 13 GiB, 40% gc
 */
