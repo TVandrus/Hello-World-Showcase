@@ -1,39 +1,42 @@
 
 # assumed environment var DAGSTER_HOME is set to ./deployed_instance/
 
-telemetry:
-  enabled: true 
 
-storage:
-  postgres:
-    should_autocreate_tables: False
-    #postgres_url: "postgresql://dev_user:dev_user@localhost:5432/development_db"
-    postgres_db:
-      hostname: localhost
-      db_name: development_db
-      port: 5432
-      username: dev_user
-      password: dev_user
+telemetry: # share data from personal projects to open-source development :) 
+  enabled: true # set to false for proprietary/sensitive jobs in production environment
 
 run_launcher:
   module: dagster.core.launcher
   class: DefaultRunLauncher
 
 # Since DefaultRunCoordinator is the default option, omitting the `run_coordinator` key will also suffice, but if you would like to set it explicitly
+  #run_coordinator:
+  #  module: dagster.core.run_coordinator
+  #  class: DefaultRunCoordinator
+
+#  There are a few ways to configure the optional QueuedRunCoordinator 
+#    to control resource usage and prioritisation at the run-level 
 run_coordinator:
   module: dagster.core.run_coordinator
-  class: DefaultRunCoordinator
-
-#  There are a few ways to configure the optional QueuedRunCoordinator to control resource usage and prioritisation 
-  # run_coordinator:
-  #   module: dagster.core.run_coordinator
-  #   class: QueuedRunCoordinator
-  #   config:
-  #     max_concurrent_runs: 3 
+  class: QueuedRunCoordinator
+  config:
+    max_concurrent_runs: 1
 
 sensors:
   use_threads: false # set true to apply num_workers config 
   num_workers: 2 
+
+# user needs default schema to create logging tables
+# alter role dev_user set search_path = dev_log,dev,postgres ;
+storage:
+  postgres:
+    #should_autocreate_tables: False
+    postgres_db:
+      hostname: localhost
+      db_name: development_db
+      port: 5432
+      username: dev_user
+      password: dev_user
 
 # set the directory that the LocalComputeLogManager writes stdout & stderr logs to
 compute_logs:

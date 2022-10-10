@@ -84,6 +84,9 @@ n_custom = 15
 
 @dag.op(tags={'resource': 'extract'})
 async def ext(context: dag.OpExecutionContext):
+    '''
+    Expected: (5 + n) seconds per extraction op
+    '''
     id = context.op_handle
     n=n_custom
     dlog.info(f"start {id}")
@@ -94,6 +97,9 @@ async def ext(context: dag.OpExecutionContext):
 
 @dag.op(tags={'resource': 'loading'})
 async def ld(context: dag.OpExecutionContext, dep: tp.List):
+    '''
+    Expected: (3 + 0.85*n * num_input_elements) 
+    '''
     id = context.op_handle
     n=n_custom * len(dep) 
     dlog.info(f"start {id}")
@@ -104,6 +110,9 @@ async def ld(context: dag.OpExecutionContext, dep: tp.List):
 
 @dag.op(tags={'resource': 'compute'})
 async def comp(context: dag.OpExecutionContext, dep: tp.List):
+    '''
+    Expected: (1 + 1.5*n) seconds per compute op
+    '''
     id = context.op_handle
     n=n_custom
     dlog.info(f"start {id}")
@@ -111,6 +120,7 @@ async def comp(context: dag.OpExecutionContext, dep: tp.List):
     await asyncio.sleep(t)
     dlog.info(f"finished {id}")
     return dag.Nothing
+
 
 
 ## Construct Dagster Graph of Ops
@@ -121,7 +131,6 @@ def simple_workflow():
     for i, d in enumerate(task_map.keys()): 
         results.append(t[i](l[i](e[i]() ) ) )
     task_report(results) 
-
 
 @dag.graph
 def custom_workflow():
@@ -149,6 +158,10 @@ def custom_workflow():
 
 @dag.graph
 def ELT_pipeline_workflow():
+    '''
+    Simulated Extract-Transform-Load pipeline workflow
+    (14 extract * ())
+    '''
     landing_data = ld.alias('loading_landing')(
         [ ext.alias('extract_sales_mapping')(), 
         ext.alias('extract_sales_actuals')(), 
@@ -191,14 +204,20 @@ def ELT_pipeline_workflow():
 @dag.repository
 def resources_repo():
     simple_job = simple_workflow.to_job(name='simple_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 2}}}}) 
-    simple_job_celery = simple_workflow.to_job(name='simple_job_celery', executor_def=cdag.celery_executor) 
+    simple_celery = simple_workflow.to_job(name='simple_job_celery', executor_def=cdag.celery_executor) 
     custom_job = custom_workflow.to_job(name='custom_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 3}}}}) 
-    custom_job_serial = custom_workflow.to_job(name='custom_job_serial', executor_def=dag.in_process_executor) 
-    custom_job = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 4}}}})
+    custom_serial = custom_workflow.to_job(name='custom_job_serial', executor_def=dag.in_process_executor) 
+    ELT_job = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 4}}}})
+    ELT_serial = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job_serial', executor_def=dag.in_process_executor)
 
-    return [simple_job
+
+    return [simple_workflow 
+        , simple_job
         #, simple_job_celery
+        , custom_workflow 
         , custom_job 
-        , custom_job_serial
+        , custom_serial
         , ELT_pipeline_workflow
+        , ELT_job
+        , ELT_serial
     ]
