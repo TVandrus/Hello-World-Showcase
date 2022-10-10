@@ -79,35 +79,35 @@ def task_report(deps):
     return dag.Nothing
 
 
-# custom ops
+# custom ops base
 n_custom = 15
 
-@dag.op
+@dag.op(tags={'resource': 'extract'})
 async def ext(context: dag.OpExecutionContext):
     id = context.op_handle
     n=n_custom
     dlog.info(f"start {id}")
-    t = round(3 + max(0, gauss(mu=n, sigma=3)))
+    t = round(5 + max(0, gauss(mu=n, sigma=3)))
     await asyncio.sleep(t)
     dlog.info(f"finished {id}")
     return dag.Nothing
 
-@dag.op
+@dag.op(tags={'resource': 'loading'})
 async def ld(context: dag.OpExecutionContext, dep: tp.List):
     id = context.op_handle
-    n=n_custom
+    n=n_custom * len(dep) 
     dlog.info(f"start {id}")
-    t = round(1 + n * (0.75 + 0.5*random()))
+    t = round(3 + n * (0.6 + 0.5*random()))
     await asyncio.sleep(t)
     dlog.info(f"finished {id}")
     return dag.Nothing
 
-@dag.op
+@dag.op(tags={'resource': 'compute'})
 async def comp(context: dag.OpExecutionContext, dep: tp.List):
     id = context.op_handle
     n=n_custom
     dlog.info(f"start {id}")
-    t = round(5 + n * max(0.5, gauss(mu=1, sigma=1)))
+    t = round(1 + n * max(0.7, gauss(mu=1.5, sigma=1)))
     await asyncio.sleep(t)
     dlog.info(f"finished {id}")
     return dag.Nothing
@@ -147,6 +147,46 @@ def custom_workflow():
             )
     report = comp.alias('cpu_r')([initialise, model_load])
 
+@dag.graph
+def ELT_pipeline_workflow():
+    landing_data = ld.alias('loading_landing')(
+        [ ext.alias('extract_sales_mapping')(), 
+        ext.alias('extract_sales_actuals')(), 
+        ext.alias('extract_sales_sharepoint')(), 
+        ext.alias('extract_sales_lan')(), 
+        ext.alias('extract_sales_queries')() 
+        ]) 
+    run_compile = comp.alias('compute_init')([landing_data]) 
+    run_docs = comp.alias('compute_docs')([run_compile]) 
+    seed_data = ld.alias('loading_seeds')(
+        [comp.alias('compute_encode')(
+            [ ext.alias('extract_seed_product')(), 
+            ext.alias('extract_seed_dates')(), 
+            ext.alias('extract_seed_agents')(), 
+            ext.alias('extract_seed_codes')()
+            ]) 
+        ])
+    non_sales_data = ld.alias('loading_peripheral')(
+        [ ext.alias('extract_src_appuser')(), 
+        ext.alias('extract_src_clientx')(), 
+        ext.alias('extract_src_pilot_monitor')(), 
+        ext.alias('extract_src_pilot_target')(), 
+        run_compile, 
+        seed_data 
+        ]) 
+    projections = ld.alias('loading_proj_pre')( 
+        [ comp.alias('compute_proj')( 
+            [ ld.alias('loading_proj')( 
+                [ ext.alias('extract_proj_config')(), 
+                run_compile, 
+                seed_data
+                ])
+            ])
+        ])
+    main_build = comp.alias('compute_build')([projections, non_sales_data]) 
+    exports = comp.alias('compute_export')([main_build]) 
+    check_logs = comp.alias('compute_logs')([main_build]) 
+
 
 @dag.repository
 def resources_repo():
@@ -154,9 +194,11 @@ def resources_repo():
     simple_job_celery = simple_workflow.to_job(name='simple_job_celery', executor_def=cdag.celery_executor) 
     custom_job = custom_workflow.to_job(name='custom_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 3}}}}) 
     custom_job_serial = custom_workflow.to_job(name='custom_job_serial', executor_def=dag.in_process_executor) 
+    custom_job = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 4}}}})
 
     return [simple_job
         #, simple_job_celery
         , custom_job 
         , custom_job_serial
+        , ELT_pipeline_workflow
     ]
