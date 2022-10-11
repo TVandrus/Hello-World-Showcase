@@ -1,29 +1,11 @@
 
-
-CELERY_QUEUES = ( # queues to assign workers 
-    Queue('default', Exchange('default'), routing_key='default'),
-    Queue('extract_queue', Exchange('extract'), routing_key='extract_pipeline'),
-    Queue('loading_queue', Exchange('loading'), routing_key='loading_pipeline'),
-    Queue('compute_queue', Exchange('compute'), routing_key='compute_pipeline'),
-)
-CELERY_ROUTES = { # assign tasks 
-    'ext_a': {'queue': 'extract_queue', 'routing_key': 'extract_pipeline'},
-    'lod_b': {'queue': 'loading_queue', 'routing_key': 'loading_pipeline'},
-    'cpu_c': {'queue': 'compute_queue', 'routing_key': 'compute_pipeline'}
-)
 execution:
   config:
     broker: 'pyamqp://guest@localhost//'  # Optional[str]: The URL of the Celery broker
     backend: 'rpc://' # Optional[str]: The URL of the Celery results backend
-    include: ['my_module'] # Optional[List[str]]: Modules every worker should import
-    config_source: # Dict[str, Any]: Any additional parameters to pass to the
+    include: ['execution_patterns/ELT-graph.py'] # Optional[List[str]]: Modules every worker should import
+    
+    #config_source: # Dict[str, Any]: Any additional parameters to pass to the
         #...       # Celery workers. This dict will be passed as the `config_source`
         #...       # argument of celery.Celery().
 
-dagster-celery worker start --name extract_worker --queue extract_queue 
-dagster-celery worker start --name load_worker --queue load_queue 
-dagster-celery worker start --name transform_worker --queue transform_queue 
-
-dagster-celery worker list 
-
-dagster-celery worker terminate --all 

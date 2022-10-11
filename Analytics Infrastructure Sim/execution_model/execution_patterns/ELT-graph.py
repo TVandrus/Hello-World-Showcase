@@ -2,10 +2,9 @@
 """
 import dagster as dag 
 import dagster_celery as cdag 
-import asyncio 
 from random import random, gauss
 import typing as tp 
-
+import asyncio, os 
 
 ## Define functions and configs
 
@@ -212,12 +211,12 @@ def resources_repo():
 
 
     return [simple_workflow 
-        , simple_job
-        #, simple_job_celery
+        , simple_job 
+        , simple_celery 
         , custom_workflow 
         , custom_job 
-        , custom_serial
-        , ELT_pipeline_workflow
-        , ELT_job
-        , ELT_serial
+        , custom_serial 
+        , ELT_pipeline_workflow 
+        , ELT_job 
+        , ELT_serial 
     ]
