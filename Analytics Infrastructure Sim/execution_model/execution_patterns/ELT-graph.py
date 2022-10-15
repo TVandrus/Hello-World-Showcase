@@ -43,7 +43,7 @@ def op_factory():
     l_list = [] 
     t_list = [] 
     for x in task_map.keys():
-        @dag.op(name=f'ext_{x}')
+        @dag.op(name=f'ext_{x}', tags={'dagster-celery/queue': 'extract_queue'})
         async def ext():
             dlog.info(f'start ext_{x}, n={task_map[x]}')
             task_log = await extract_task(id=x, n=task_map[x])
@@ -52,7 +52,7 @@ def op_factory():
         e_list.append(ext)
     
     for x in task_map.keys():
-        @dag.op(name=f'load_{x}')
+        @dag.op(name=f'load_{x}', tags={'dagster-celery/queue': 'load_queue'})
         async def ld(prev):
             dlog.info(f'start load_{x}')
             task_log = await load_task(prev)
@@ -61,7 +61,7 @@ def op_factory():
         l_list.append(ld)
     
     for x in task_map.keys():
-        @dag.op(name=f'cpu_{x}')
+        @dag.op(name=f'cpu_{x}', tags={'dagster-celery/queue': 'compute_queue'})
         async def comp(prev):
             dlog.info(f'start cpu_{x}')
             task_log = await compute_task(prev)
@@ -81,7 +81,7 @@ def task_report(deps):
 # custom ops base
 n_custom = 15
 
-@dag.op(tags={'resource': 'extract'})
+@dag.op(tags={'dagster-celery/queue': 'extract_queue'})
 async def ext(context: dag.OpExecutionContext):
     '''
     Expected: (5 + n) seconds per extraction op
@@ -94,7 +94,7 @@ async def ext(context: dag.OpExecutionContext):
     dlog.info(f"finished {id}")
     return dag.Nothing
 
-@dag.op(tags={'resource': 'loading'})
+@dag.op(tags={'dagster-celery/queue': 'load_queue'})
 async def ld(context: dag.OpExecutionContext, dep: tp.List):
     '''
     Expected: (3 + 0.85*n * num_input_elements) 
@@ -107,7 +107,7 @@ async def ld(context: dag.OpExecutionContext, dep: tp.List):
     dlog.info(f"finished {id}")
     return dag.Nothing
 
-@dag.op(tags={'resource': 'compute'})
+@dag.op(tags={'dagster-celery/queue': 'compute_queue'})
 async def comp(context: dag.OpExecutionContext, dep: tp.List):
     '''
     Expected: (1 + 1.5*n) seconds per compute op
@@ -208,7 +208,7 @@ def resources_repo():
     custom_serial = custom_workflow.to_job(name='custom_job_serial', executor_def=dag.in_process_executor) 
     ELT_job = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 4}}}})
     ELT_serial = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job_serial', executor_def=dag.in_process_executor)
-
+    ELT_celery = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job_celery', executor_def=cdag.celery_executor)
 
     return [simple_workflow 
         , simple_job 
@@ -219,4 +219,5 @@ def resources_repo():
         , ELT_pipeline_workflow 
         , ELT_job 
         , ELT_serial 
+        , ELT_celery 
     ]

@@ -4,21 +4,33 @@
 
 # 1. 
 # start task broker (RabbitMQ) 
-cd 
-docker run -p 5672:5672 rabbitmq:3.8.2
+Start-Process powershell -Verb runAs 
+cd "S:\RabbitMQServer\rabbitmq_server-3.11.0\sbin"
+.\rabbitmq-service.bat stop
+.\rabbitmq-service.bat remove
+$env:ERLANG_HOME = "S:\Erlang\Erlang OTP\erts-13.1.1"
+$env:RABBITMQ_SERVICENAME = "RabbitMQ"
+$env:RABBITMQ_BASE = "" # This is the location of log and database directories.
+$env:RABBITMQ_NODENAME = "rabbit@localhost" # default
+#Can be used to run multiple nodes on the same host.  Every node in a cluster must have a unique RABBITMQ_NODENAME
+$env:RABBITMQ_NODE_PORT = 5672 # default
+$env:ERLANG_SERVICE_MANAGER_PATH = "S:\Erlang\Erlang OTP\erts-13.1.1\bin"
+$env:RABBITMQ_CONSOLE_LOG = "S:\RabbitMQServer\debug_logs"
+.\rabbitmq-service.bat install
+.\rabbitmq-service.bat start 
 
 
 # 2. 
 # start celery task workers 
 cd 'S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/execution_model/celery_instance/' 
+$env:DAGSTER_HOME = 'S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/execution_model/celery_instance' 
 
-dagster-celery worker start --name extract_worker --queue extract_queue --config-yaml celeryconfig.yaml 
-dagster-celery worker start --name load_worker --queue load_queue --config-yaml celeryconfig.yaml 
-dagster-celery worker start --name transform_worker --queue transform_queue --config-yaml celeryconfig.yaml 
+dagster-celery worker start -A dagster_celery.app --name extract_worker --queue extract_queue --config-yaml celery_config.yaml
+dagster-celery worker start -A dagster_celery.app --name loading_worker --queue loading_queue --config-yaml celery_config.yaml 
+dagster-celery worker start -A dagster_celery.app --name compute_worker --queue compute_queue --config-yaml celery_config.yaml 
 
 dagster-celery worker list 
 #dagster-celery worker terminate --all 
-
 
 # 3. 
 # start persistent dagster-daemon process (mandatory for scheduled or queued run execution) 

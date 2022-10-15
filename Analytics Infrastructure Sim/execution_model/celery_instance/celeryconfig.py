@@ -1,4 +1,3 @@
-import dagster as dag
 import dagster_celery as cdag 
 
 ## Broker settings.
