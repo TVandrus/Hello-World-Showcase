@@ -22,12 +22,14 @@ $env:RABBITMQ_CONSOLE_LOG = "S:\RabbitMQServer\debug_logs"
 
 # 2. 
 # start celery task workers 
-cd 'S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/execution_model/celery_instance/' 
+cd 'S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/execution_model/' 
 $env:DAGSTER_HOME = 'S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/execution_model/celery_instance' 
 
-dagster-celery worker start -A dagster_celery.app --name extract_worker --queue extract_queue --config-yaml celery_config.yaml
-dagster-celery worker start -A dagster_celery.app --name loading_worker --queue loading_queue --config-yaml celery_config.yaml 
-dagster-celery worker start -A dagster_celery.app --name compute_worker --queue compute_queue --config-yaml celery_config.yaml 
+# one process for each 
+dagster-celery worker start -A custom_app --name extract_worker --queue extract_queue --config-yaml /celery_instance/celery_config.yaml --includes execution_patterns.ELT-graph 
+dagster-celery worker start -A custom_app --name loading_worker --queue loading_queue --config-yaml /celery_instance/celery_config.yaml --includes execution_patterns.ELT-graph 
+dagster-celery worker start -A custom_app --name compute_worker --queue compute_queue --config-yaml /celery_instance/celery_config.yaml --includes execution_patterns.ELT-graph 
+
 
 dagster-celery worker list 
 #dagster-celery worker terminate --all 
