@@ -52,6 +52,7 @@ using Plots
 
     const nnet = nnet_abs # current architecture to be used 
 
+##################################################
 # convenient abstractions/shorthand notation 
     const symbol = (empty=' ', rock='#', food='.', head='$', body='@')
     const empty_world = [repeat([symbol.rock], 1, world_param.cols+2);
@@ -129,6 +130,7 @@ using Plots
         display(x.winners[1])
     end
 
+##################################################
 # core simulation components/logic 
 """
 Display a game State via terminal
@@ -242,6 +244,172 @@ function think!(state::State, brain::Brain)::State
 
     return state
 end
+
+function think_abs!(state::State, brain::Brain)::State
+    # allocate model arrays
+    nn_input = zeros(Float32, 1, nnet.input)
+    nn_hidden1 = zeros(Float32, 1, nnet.hidden1)
+    nn_hidden2 = zeros(Float32, 1, nnet.hidden2)
+    nn_hidden3 = zeros(Float32, 1, nnet.hidden3)
+    nn_output = zeros(Float32, 1, nnet.output)
+    
+    # fill in inputs
+    # check adjacent squares: left, straight, and right
+    #=
+    for (i, adj) in enumerate([state.head+state.dir*R, state.head+state.dir, state.head-state.dir*R])
+        if any([ any(adj .< 1), (adj[1] > world_param.rows), (adj[2] > world_param.cols), (adj in state.body) ])
+            nn_input[i] = -1
+        elseif adj == state.food
+            nn_input[i] = 1
+        else # empty space
+            nn_input[i] = 0
+        end
+    end
+    =#
+    
+    #=
+    nn_input[9:12] = [state.head[1]/world_param.rows, 
+                    state.head[2]/world_param.cols,
+                    (state.food[1])/world_param.rows, 
+                    (state.food[2])/world_param.cols]
+
+    nn_input[9:10] = state.dir
+    nn_input[11:12] = state.mem1
+    nn_input[13:14] = state.mem2
+    nn_input[15:16] = state.mem3
+    
+    state.mem3 = state.mem2
+    state.mem2 = state.mem1
+    state.mem1 = state.dir
+    =#
+    
+    # fill in inputs
+    for (i, adj) in enumerate([d.up, d.right, d.down, d.left])
+        adj = state.head + adj
+        if all([ all(adj .> 0), (adj[1] <= world_param.rows), (adj[2] <= world_param.cols), !(adj in state.body) ])
+            nn_input[i] = 1 # safe to go
+        end
+    end
+    
+    fdir = state.head - state.food
+    if fdir[1] > 0
+        nn_input[5] = 1 # food is up
+    elseif fdir[1] < 0
+        nn_input[7] = 1 # food is down
+    end
+
+    if fdir[2] < 0
+        nn_input[6] = 1 # food is right
+    elseif fdir[2] > 0
+        nn_input[8] = 1 # food is left
+    end
+    
+    
+    # calculate output
+    nn_hidden1 = nn_input * brain.w_input_hidden1
+    nn_hidden1[nn_hidden1 .< 0] .= 0
+    nn_hidden2 = nn_hidden1 * brain.w_hidden1_hidden2
+    nn_hidden2[nn_hidden2 .< 0] .= 0
+    nn_hidden3 = nn_hidden2 * brain.w_hidden2_hidden3
+    nn_hidden3[nn_hidden3 .< 0] .= 0
+    nn_output = nn_hidden3 * brain.w_hidden3_output
+
+    a = argmax(vec(nn_output))
+    #a = rand([1,2,3,4]) #TESTING w RANDOM BRAIN
+
+    # update state direction accordingly
+    if a == 1 # up
+        state.dir = d.up
+    elseif a == 2 # right
+        state.dir = d.right
+    elseif a == 3 # down
+        state.dir = d.down
+    elseif a == 4 # left
+        state.dir = d.left
+    else
+        error("What are you trying to do?")
+    end
+
+    return state
+end
+
+function think_rel!(state::State, brain::Brain)::State
+    # allocate model arrays
+    nn_input = zeros(Float32, 1, nnet.input)
+    nn_hidden1 = zeros(Float32, 1, nnet.hidden1)
+    nn_hidden2 = zeros(Float32, 1, nnet.hidden2)
+    nn_hidden3 = zeros(Float32, 1, nnet.hidden3)
+    nn_output = zeros(Float32, 1, nnet.output)
+    
+    # fill in inputs
+    # check adjacent squares: left, straight, and right
+    
+    for (i, adj) in enumerate([state.head+state.dir*R, state.head+state.dir, state.head-state.dir*R])
+        if any([ any(adj .< 1), (adj[1] > world_param.rows), (adj[2] > world_param.cols), (adj in state.body) ])
+            nn_input[i] = -1
+        elseif adj == state.food
+            nn_input[i] = 1
+        else # empty space
+            nn_input[i] = 0
+        end
+    end
+    
+    nn_input[9:12] = [state.head[1]/world_param.rows, 
+                    state.head[2]/world_param.cols,
+                    (state.food[1])/world_param.rows, 
+                    (state.food[2])/world_param.cols]
+    nn_input[9:10] = state.dir
+    nn_input[11:12] = state.mem1
+    nn_input[13:14] = state.mem2
+    #nn_input[15:16] = state.mem3
+    
+    #state.mem3 = state.mem2
+    state.mem2 = state.mem1
+    state.mem1 = state.dir
+    
+    fdir = state.head - state.food
+    if fdir[1] > 0
+        nn_input[5] = 1 # food is up
+    elseif fdir[1] < 0
+        nn_input[7] = 1 # food is down
+    end
+
+    if fdir[2] < 0
+        nn_input[6] = 1 # food is right
+    elseif fdir[2] > 0
+        nn_input[8] = 1 # food is left
+    end
+    
+    
+    # calculate output
+    nn_hidden1 = nn_input * brain.w_input_hidden1
+    nn_hidden1[nn_hidden1 .< 0] .= 0
+    nn_hidden2 = nn_hidden1 * brain.w_hidden1_hidden2
+    nn_hidden2[nn_hidden2 .< 0] .= 0
+    nn_hidden3 = nn_hidden2 * brain.w_hidden2_hidden3
+    nn_hidden3[nn_hidden3 .< 0] .= 0
+    nn_output = nn_hidden3 * brain.w_hidden3_output
+
+    a = argmax(vec(nn_output))
+    #a = rand([1,2,3,4]) #TESTING w RANDOM BRAIN
+
+    # update state direction accordingly
+    if a == 1 # up
+        state.dir = d.up
+    elseif a == 2 # right
+        state.dir = d.right
+    elseif a == 3 # down
+        state.dir = d.down
+    elseif a == 4 # left
+        state.dir = d.left
+    else
+        error("What are you trying to do?")
+    end
+
+    return state
+end
+
+
 
 """
 Executes action determined by think!(), and evaluates consequences
