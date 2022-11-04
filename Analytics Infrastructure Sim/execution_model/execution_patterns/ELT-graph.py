@@ -4,7 +4,8 @@ import dagster as dag
 import dagster_celery as cdag 
 from random import random, gauss
 import typing as tp 
-import asyncio, os 
+import asyncio, os, yaml  
+from pathlib import Path
 
 ## Define functions and configs
 
@@ -16,7 +17,7 @@ task_map = {
     'b': 12, 
     'c': 16,
     'd': 22,
-    'e': 30
+    'e': 30,
 }
 
 async def extract_task(id, n=n_default):
@@ -203,12 +204,20 @@ def ELT_pipeline_workflow():
 @dag.repository
 def resources_repo():
     simple_job = simple_workflow.to_job(name='simple_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 2}}}}) 
-    simple_celery = simple_workflow.to_job(name='simple_job_celery', executor_def=cdag.celery_executor) 
+    simple_celery = simple_workflow.to_job(
+        name='simple_job_celery', 
+        executor_def=cdag.celery_executor,
+        config={'execution': {'config': yaml.safe_load(Path('celery_instance/celery_config.yaml').read_text())}}
+    ) 
     custom_job = custom_workflow.to_job(name='custom_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 3}}}}) 
     custom_serial = custom_workflow.to_job(name='custom_job_serial', executor_def=dag.in_process_executor) 
     ELT_job = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 4}}}})
     ELT_serial = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job_serial', executor_def=dag.in_process_executor)
-    ELT_celery = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job_celery', executor_def=cdag.celery_executor)
+    ELT_celery = ELT_pipeline_workflow.to_job(
+        name='ELT_pipeline_job_celery', 
+        executor_def=cdag.celery_executor, 
+        config={'execution': {'config': yaml.safe_load(Path('celery_instance/celery_config.yaml').read_text())}}
+    )
 
     return [simple_workflow 
         , simple_job 

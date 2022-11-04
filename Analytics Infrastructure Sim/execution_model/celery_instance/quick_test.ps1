@@ -22,13 +22,20 @@ $env:RABBITMQ_CONSOLE_LOG = "S:\RabbitMQServer\debug_logs"
 
 # 2. 
 # start celery task workers 
-cd 'S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/execution_model/' 
-$env:DAGSTER_HOME = 'S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/execution_model/celery_instance' 
+cd 'S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/execution_model/'
+$env:DAGSTER_HOME = 'S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/execution_model/celery_instance'
 
-# one process for each 
-dagster-celery worker start -A custom_app --name extract_worker --queue extract_queue --config-yaml /celery_instance/celery_config.yaml --includes execution_patterns.ELT-graph 
-dagster-celery worker start -A custom_app --name loading_worker --queue loading_queue --config-yaml /celery_instance/celery_config.yaml --includes execution_patterns.ELT-graph 
-dagster-celery worker start -A custom_app --name compute_worker --queue compute_queue --config-yaml /celery_instance/celery_config.yaml --includes execution_patterns.ELT-graph 
+
+# unspecified queue
+dagster-celery worker start -A celery_instance.app_copy --name default_worker --config-yaml celery_instance/celery_config.yaml 
+
+# all queues
+dagster-celery worker start -A celery_instance.app_copy --name multi_worker --queue dagster,extract_queue,loading_queue,compute_queue --config-yaml celery_instance/celery_config.yaml 
+
+# task-specific queues
+dagster-celery worker start -A celery_instance.app_copy --name extract_worker --queue extract_queue --config-yaml celery_instance/celery_config.yaml 
+dagster-celery worker start -A celery_instance.app_copy --name loading_worker --queue loading_queue --config-yaml celery_instance/celery_config.yaml 
+dagster-celery worker start -A celery_instance.app_copy --name compute_worker --queue compute_queue --config-yaml celery_instance/celery_config.yaml 
 
 
 dagster-celery worker list 
