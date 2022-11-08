@@ -12,23 +12,22 @@ def make_app(app_args=None):
     )
 
 
-def make_app_with_task_routes(task_routes, app_args=None):
+def make_app_with_task_routes(task_routes=None, app_args=None):
     app_ = Celery("dagster_celery_app_copy", **(app_args if app_args else {}))
 
     if app_args is None:
         app_.config_from_object("celery_instance.dagster_celery_config", force=True)
 
         if is_module_available("dagster_celery_config"):
-            # pylint: disable=protected-access
             obj = force_mapping(app_.loader._smart_import("dagster_celery_config"))
             app_.conf.update(obj)
 
-    app_.loader.import_module("celery.contrib.testing.tasks")
+    #app_.loader.import_module("celery.contrib.testing.tasks")
 
-    app_.conf.task_queues = [
-        Queue("dagster", routing_key="dagster.#", queue_arguments={"x-max-priority": 10})
-    ]
-    app_.conf.task_routes = task_routes
-    app_.conf.task_queue_max_priority = 10
-    app_.conf.task_default_priority = 5
+    # hardcoded overrides if config value will be blank or inappropriate 
+    #app_.conf.task_queues = [Queue("dagster", routing_key="dagster.#")]
+    if task_routes:
+        app_.conf.task_routes = task_routes
+    #app_.conf.task_queue_max_priority = 10
+    #app_.conf.task_default_priority = 5
     return app_

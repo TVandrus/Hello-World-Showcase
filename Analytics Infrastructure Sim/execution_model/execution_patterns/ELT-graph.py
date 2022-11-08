@@ -1,7 +1,7 @@
 """
 """
 import dagster as dag 
-import dagster_celery as cdag 
+from celery_instance.executor_copy import celery_executor 
 from random import random, gauss
 import typing as tp 
 import asyncio, os, yaml  
@@ -39,27 +39,30 @@ async def compute_task(tlog):
 
 
 ## Define Dagster Ops
-def op_factory():
+def simple_op_factory():
     e_list = [] 
     l_list = [] 
     t_list = [] 
     for x in task_map.keys():
+        
         @dag.op(name=f'ext_{x}', tags={'dagster-celery/queue': 'extract_queue'})
         async def ext():
             dlog.info(f'start ext_{x}, n={task_map[x]}')
             task_log = await extract_task(id=x, n=task_map[x])
             dlog.info(f'finished ext_{x}')
             return task_log
-        e_list.append(ext)
+        fn = ext 
+        e_list.append(fn)
     
     for x in task_map.keys():
-        @dag.op(name=f'load_{x}', tags={'dagster-celery/queue': 'load_queue'})
+        @dag.op(name=f'load_{x}', tags={'dagster-celery/queue': 'loading_queue'})
         async def ld(prev):
             dlog.info(f'start load_{x}')
             task_log = await load_task(prev)
             dlog.info(f'finished load_{x}')
             return task_log
-        l_list.append(ld)
+        fn = ld
+        l_list.append(fn)
     
     for x in task_map.keys():
         @dag.op(name=f'cpu_{x}', tags={'dagster-celery/queue': 'compute_queue'})
@@ -68,7 +71,8 @@ def op_factory():
             task_log = await compute_task(prev)
             dlog.info(f'finished cpu_{x}')
             return task_log
-        t_list.append(comp)
+        fn = comp
+        t_list.append(fn)
 
     return e_list, l_list, t_list
 
@@ -95,7 +99,7 @@ async def ext(context: dag.OpExecutionContext):
     dlog.info(f"finished {id}")
     return dag.Nothing
 
-@dag.op(tags={'dagster-celery/queue': 'load_queue'})
+@dag.op(tags={'dagster-celery/queue': 'loading_queue'})
 async def ld(context: dag.OpExecutionContext, dep: tp.List):
     '''
     Expected: (3 + 0.85*n * num_input_elements) 
@@ -126,7 +130,7 @@ async def comp(context: dag.OpExecutionContext, dep: tp.List):
 ## Construct Dagster Graph of Ops
 @dag.graph 
 def simple_workflow():
-    (e, l, t) = op_factory()
+    (e, l, t) = simple_op_factory()
     results = []
     for i, d in enumerate(task_map.keys()): 
         results.append(t[i](l[i](e[i]() ) ) )
@@ -206,8 +210,8 @@ def resources_repo():
     simple_job = simple_workflow.to_job(name='simple_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 2}}}}) 
     simple_celery = simple_workflow.to_job(
         name='simple_job_celery', 
-        executor_def=cdag.celery_executor,
-        config={'execution': {'config': yaml.safe_load(Path('celery_instance/celery_config.yaml').read_text())}}
+        executor_def=celery_executor,
+        config=yaml.safe_load(Path('celery_instance/celery_config.yaml').read_text())
     ) 
     custom_job = custom_workflow.to_job(name='custom_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 3}}}}) 
     custom_serial = custom_workflow.to_job(name='custom_job_serial', executor_def=dag.in_process_executor) 
@@ -215,8 +219,8 @@ def resources_repo():
     ELT_serial = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job_serial', executor_def=dag.in_process_executor)
     ELT_celery = ELT_pipeline_workflow.to_job(
         name='ELT_pipeline_job_celery', 
-        executor_def=cdag.celery_executor, 
-        config={'execution': {'config': yaml.safe_load(Path('celery_instance/celery_config.yaml').read_text())}}
+        executor_def=celery_executor, 
+        config=yaml.safe_load(Path('celery_instance/celery_config.yaml').read_text())
     )
 
     return [simple_workflow 

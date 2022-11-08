@@ -20,17 +20,16 @@ run_coordinator:
   module: dagster.core.run_coordinator
   class: QueuedRunCoordinator
   config:
-    max_concurrent_runs: 1
+    max_concurrent_runs: 2
 
 sensors:
   use_threads: false # set true to apply num_workers config 
-  num_workers: 2 
+  num_workers: 4 
 
 # user needs default schema to create logging tables
 # alter role dev_user set search_path = dev_log,dev,postgres ;
 storage:
   postgres:
-    #should_autocreate_tables: False
     postgres_db:
       hostname: localhost
       db_name: development_db
