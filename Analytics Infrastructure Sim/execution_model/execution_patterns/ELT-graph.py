@@ -20,6 +20,89 @@ task_map = {
     'e': 30,
 }
 
+source_map = {
+    'A': {'n': 20, 'latency': 2}, 
+    'B': {'n': 25, 'latency': 2}, 
+    'C': {'n': 30, 'latency': 1}, 
+    'D': {'n': 40, 'latency': 1}, 
+    #'E': {'n': 50, 'latency': 0}, 
+}
+
+async def extract_det(id, q, map):
+    async with q:
+        dur = map[id]['n'] / 4 + map[id]['latency'] 
+        await asyncio.sleep(dur)
+    return dur 
+
+async def loading_det(id, q, map):
+    async with q:
+        dur = map[id]['n'] / 2 
+        await asyncio.sleep(dur)
+    return dur 
+
+async def compute_det(id, q, map):
+    async with q: 
+        dur = (map[id]['n'] / 8) ** 2 + 1
+        await asyncio.sleep(dur)
+    return dur 
+
+
+def det_op_factory():
+    op_map = source_map
+    e_list = [] 
+    l_list = [] 
+    t_list = [] 
+    queues = {
+        'extract': asyncio.Semaphore(1), 
+        'loading': asyncio.Semaphore(1), 
+        'compute': asyncio.Semaphore(1), 
+    }
+    for x in op_map.keys():
+        @dag.op(name=f'd_ext_{x}', ins={'n': dag.In(op_map[x]['n'])})
+        async def ext():
+            dlog.info(f"start ext_{x}, n={op_map[x]['n']}")
+            task_log = await extract_det(id=x, q=queues['extract'], map=op_map)
+            dlog.info(f'finished ext_{x}')
+            return task_log
+        fn = ext 
+        e_list.append(fn)
+    
+    for x in op_map.keys():
+        @dag.op(name=f'd_load_{x}')
+        async def ld(dep):
+            dlog.info(f'start load_{x}')
+            task_log = await loading_det(id=x, q=queues['loading'], map=op_map)
+            dlog.info(f'finished load_{x}')
+            return dep + task_log
+        fn = ld
+        l_list.append(fn)
+    
+    for x in op_map.keys():
+        @dag.op(name=f'd_cpu_{x}')
+        async def comp(dep):
+            dlog.info(f'start cpu_{x}')
+            task_log = await compute_det(id=x, q=queues['compute'], map=op_map)
+            dlog.info(f'finished cpu_{x}')
+            return {x: dep + task_log}
+        fn = comp
+        t_list.append(fn)
+
+    return e_list, l_list, t_list, queues
+
+
+@dag.op
+def display(dep):
+    dlog.info(dep)
+
+@dag.graph()
+def det_dispatcher():
+    e, l, t, q = det_op_factory()
+    results = []
+    for i in range(len(e)):
+        results.append(t[i](l[i](e[i]())))
+    display(results)
+
+
 async def extract_task(id, n=n_default):
     t = round(3 + max(0, gauss(mu=n, sigma=3)))
     await asyncio.sleep(t)
@@ -36,6 +119,7 @@ async def compute_task(tlog):
     await asyncio.sleep(t)
     tlog['cpu'] = t
     return tlog
+
 
 
 ## Define Dagster Ops
@@ -160,6 +244,8 @@ def custom_workflow():
             )
     report = comp.alias('cpu_r')([initialise, model_load])
 
+
+
 @dag.graph
 def ELT_pipeline_workflow():
     '''
@@ -223,9 +309,10 @@ def resources_repo():
         config=yaml.safe_load(Path('celery_instance/celery_config.yaml').read_text())
     )
 
-    return [simple_workflow 
-        , simple_job 
-        , simple_celery 
+    return [#simple_workflow 
+        #, simple_job 
+        #simple_celery 
+         det_dispatcher
         , custom_workflow 
         , custom_job 
         , custom_serial 
