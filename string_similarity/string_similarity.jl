@@ -1,18 +1,16 @@
 
-
 # another example implementation of the original
 # https://stackoverflow.com/questions/19123506/jaro-winkler-distance-algorithm-in-c-sharp/19165108#19165108
 
 """
 Custom string fuzzy matching on a scale of [0, 1]
 0 => no similarity, 1 => exact match
-Loosely based on Jaro similarity: https://en.wikipedia.org/wiki/Jaro–Winkler_distance
+Loosely based on Jaro similarity: https://en.wikipedia.org/wiki/Jaro-Winkler_distance
 Empirically, random/independent strings ~0.40 on average, similar strings >0.85
 """
 function string_compare(s1::String, s2::String; verbose::Bool=false,
                         strip::Array{String}=[" "], keep_case::Bool=false, 
                         ignore_short::Int=4)::Float64
-
     # Pre-Processing
     # remove spaces by default, allows arbitrary strings to be stripped away
     if length(strip) > 0
@@ -29,20 +27,16 @@ function string_compare(s1::String, s2::String; verbose::Bool=false,
         s1, s2 = uppercase(s1), uppercase(s2)
     end
     if verbose # display processed strings
-        println("$l1 - $s1")
-        println("$l2 - $s2")
-    end
-
-    # short circuit if above processing makes an exact match
-    if isequal(s1, s2)
-        return 1
+        @info "$l1 - $s1"
+        @info "$l2 - $s2"
     end
     
-    if (l2 == 0) || (l2 <= ignore_short)
-        # arbitrary decision that fuzzy matching of 'short' strings
-        #   is not informative
+    if isequal(s1, s2) # short circuit if above processing makes an exact match
+        return 1
+    end
+    if (l2 == 0) || (l2 <= ignore_short) # arbitrary decision that fuzzy matching of 'short' strings is not informative
         if verbose 
-            println("short string")
+            @info "short string"
         end
         # already tested for exact matches
         return 0
@@ -54,7 +48,7 @@ function string_compare(s1::String, s2::String; verbose::Bool=false,
     #mdist = l1 ÷ 4 # bidirectional window needs to be smaller
     mdist::Int = floor(Int, sqrt(l1))
     if verbose
-        println("match dist - $mdist")
+        @info "match dist - $mdist"
     end
     
     # order-sensitive match index of each character such that
@@ -78,26 +72,30 @@ function string_compare(s1::String, s2::String; verbose::Bool=false,
         end            
     end
     if verbose
-        @debug m1 
-        @debug m2
+        @info m1 
+        @info m2
     end
 
     matches::Int = length(m2)
     if verbose
-        println("matches - $matches")
+        @info "matches - $matches"
     end
 
     if matches == 0
         return 0
     elseif matches == 1
+        # the 'else' condition for the general would return the same outcome
+        # but this short-circuit skips the logic for transposes
         return round((1/l1 + 1/l2 + 1) / 3, digits=3)
     else
         transposes = sum([!isless(m2[k-1], m2[k]) for k in 2:matches])
         if verbose
-            println("transposes - $transposes")
+            @info "transposes - $transposes"
         end
-        return round((matches / l1 + matches / l2 +
-                (matches - transposes) / matches ) / 3, digits=3)
+        return round(
+            (matches / l1 + 
+            matches / l2 +
+            (matches - transposes) / matches ) / 3, digits=3)
     end    
 end
 
@@ -122,25 +120,4 @@ s1 = "123 Falconridge Cres Kitchener ON N2K1B3"
 s2 = "123 Falconridge Crescent Kitchener ON N2K1B3"
 
 string_compare(s1, s2, verbose=true) 
-=#
-
-#= performance testing
-using Random, StatsBase, Base.Threads
-
-string_compare("test", "string", verbose=true)
-
-n = 100000
-l = 100
-results = zeros(n)
-@time begin
-    @threads for i in 1:n
-        results[i] = string_compare(randstring("abcdefghijklmnopqrstuvwxyz0123456789 ", l),
-                                    randstring("abcdefghijklmnopqrstuvwxyz0123456789 ", l))
-    end
-end
-summarystats(results)
-
-# performance test: 100k comparisons of random 100-char strings
-# original: 10s, 257M alloc, 15 GiB, 40% gc
-# type annotated: 9s 150M alloc, 13 GiB, 40% gc
 =#
