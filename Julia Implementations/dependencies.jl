@@ -35,3 +35,4 @@ using Plots
 
 # miscellaneous
 using Pluto
+using PackageCompiler
