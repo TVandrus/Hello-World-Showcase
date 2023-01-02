@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.19
+# v0.19.15
 
 using Markdown
 using InteractiveUtils
@@ -15,10 +15,10 @@ macro bind(def, element)
 end
 
 # ╔═╡ e9e26fe7-a170-4481-941a-749f3a20bb2a
-using PlutoUI
+using PlutoUI;
 
 # ╔═╡ 25fc2f12-8a34-11ed-00af-b19ec1200616
-include("string_similarity.jl")
+include("string_similarity.jl");
 
 # ╔═╡ 2954b96f-5204-476c-a5ff-acf6d002bfe4
 md"
@@ -27,7 +27,7 @@ md"
 
 # ╔═╡ 0b728942-74b1-4e3a-bed6-4e69b0407842
 # naive equality, after stripping out spaces and standardizing letter-case
-function heuristic_isequal(s1, s2) 
+function heuristic_isequal(s1, s2)::Float64
 	s1 = uppercase(replace(s1, " " => "")) 
 	s2 = uppercase(replace(s2, " " => "")) 
 	return isequal(s1, s2)
@@ -36,7 +36,7 @@ end
 # ╔═╡ 3799d6a3-8e7a-44a7-b8a0-5d25202d52e7
 # Jaccard Similarity = |intersection of characters| / |union of characters|
 #  debatable whether the pre-processing of text to be standard improves the signal-to-noise, or hinders it for this algorithm
-function jaccard_similarity(s1::String, s2::String)::Float64 
+function jaccard_similarity(s1, s2)::Float64 
 	s1 = uppercase(replace(s1, " " => "")) 
 	s2 = uppercase(replace(s2, " " => "")) 
 	return round(length(intersect(Set(s1), Set(s2))) / length(union(Set(s1), Set(s2))), digits=3)
@@ -78,7 +78,7 @@ md"# Demonstration"
 # standard/concise format for executing comparative examples
 function run_test(triplet, fn=string_compare)
 	return string("similar pair: ", fn(triplet[1], triplet[2]), 
-		" vs differing pair: ", fn(triplet[1], triplet[3]))
+		" VS differing pair: ", fn(triplet[1], triplet[3]))
 end
 
 # ╔═╡ 1f86bf60-68ba-4646-894f-06ef1c578fb0
@@ -106,7 +106,7 @@ For the purpose of characterising the algorithm performance, all further example
 "
 
 # ╔═╡ 4b88d235-7e64-4d88-9e28-7980355795b7
-# these are all the same
+# these are all the same, but the naive equality test fails to indicate that
 example_b = ["Test String", "TestString", "test string"]
 
 # ╔═╡ ba291ea9-d5de-4d06-b72a-bb9ff57ba934
@@ -123,9 +123,7 @@ run_test(example_b, string_compare)
 
 # ╔═╡ 7d7af72c-cca3-4540-a15c-ce73d163cfc9
 md"
-A series of examples consisting of three text strings, the first two should be rated more similar to each other (positive match), but the first and third should be less similar (negative match).
-
-
+A series of examples consisting of three text strings, the first two should be rated more similar to each other (positive match), but the first and third should be less similar (negative match). 
 "
 
 # ╔═╡ dd35dc9d-693f-4365-ac80-afefb58cf5c3
@@ -147,7 +145,7 @@ md"Implicitly, text addresses of a similar length should end up more similar, ev
 example_d = ["123 King St South Waterloo", "123 King Street S Waterloo", "123 Insurance Boulevard Kingston"]
 
 # ╔═╡ 4d8f0de7-9c35-46ab-b7c4-ec3ca5e81d5c
-run_test(example_d)
+run_test(example_d, string_compare)
 
 # ╔═╡ 620be601-5953-4baf-9f8b-74d35fe801d3
 run_test(example_d, jaccard_similarity)
@@ -159,7 +157,7 @@ md"A 'bag-of-characters' approach like Jaccard without accounting for order is h
 example_e = ["Katherine", "Kahterine", "Katerinah"]
 
 # ╔═╡ c2503166-68f4-4606-b306-b96a6f1cc9e6
-run_test(example_e)
+run_test(example_e, string_compare)
 
 # ╔═╡ da2ccc49-9e72-40f3-ac06-a1b1cbc33f50
 run_test(example_e, jaccard_similarity)
@@ -174,7 +172,7 @@ As later discussed in more depth, while the motivation included comparing addres
 example_f = ["the sun life insurance company of canada", "sun the life insurance company of canada", "the life insurance company of canada sun"]
 
 # ╔═╡ 2012d0d7-b376-4c5e-95bd-f62d22849ecf
-run_test(example_f)
+run_test(example_f, string_compare)
 
 # ╔═╡ 4d32eebb-4e3f-430e-a1e9-d117284c4ccf
 run_test(example_f, jaccard_similarity)
@@ -189,14 +187,21 @@ This turned out to be highly informative to the manual reviewers, and justified 
 # ╔═╡ dd163732-edf5-4e51-8784-a82e50b66d18
 md"## Try it!"
 
+# ╔═╡ ffca7ed5-a50e-466a-9c66-b7f35fc1e62d
+md"
+The expectation is that a better-performing algorithm will rate more-similar pairs higher, and less-similar pairs lower. Further, a well-behaved similarity function will impose less of a penalty as 'less meaningful' changes are added between the compared texts, but changes that substantially change how the text address is interpreted should drastically lower the similarity score.
+
+See if string_compare demonstrates this, based on texts that you consider to be more or less similar.
+" 
+
 # ╔═╡ 74dc476d-0e9b-42fa-aaeb-de4b8a6ce750
-@bind text_1 TextField(default="Add your own example text")
+@bind text_1 TextField(default="Put your example text here")
 
 # ╔═╡ 2e68f87c-dbda-4fe2-9735-35c2cf987ef7
-@bind text_2 TextField(default="Add your own sample text")
+@bind text_2 TextField(default="Put your sample text here.")
 
 # ╔═╡ 65406e88-01ea-4d62-852f-5d41a8e88109
-@bind text_3 TextField(default="Put something else here")
+@bind text_3 TextField(default="Enter something else here")
 
 # ╔═╡ 9373b74a-1df5-46fd-9d0d-005996c42a89
 interactive_example = [text_1, text_2, text_3]
@@ -213,11 +218,13 @@ run_test(interactive_example, heuristic_isequal)
 # ╔═╡ 3889985e-df9c-4b28-a059-9ea57993a575
 run_test(interactive_example, isequal)
 
-# ╔═╡ 8c987315-6a04-4f91-9e48-c6968c4157ae
-
-
-# ╔═╡ e265cbb7-ed17-48eb-b3a1-9952affb312d
-
+# ╔═╡ 15e559aa-c5a7-4f15-8de8-5cbcea6ffbdc
+# modify this code to see the influence of different parameters on your examples
+string_compare(text_1, text_2, 
+	strip=[" ", "-", ",", "."], 
+	keep_case=true, 
+	ignore_short=5 
+)
 
 # ╔═╡ 2eabe02b-1f34-4789-a38d-b4162b47eb84
 md"# Algorithm Design In-Depth"
@@ -225,14 +232,39 @@ md"# Algorithm Design In-Depth"
 # ╔═╡ 56cb357a-c691-4219-a28c-3b906b514446
 md""
 
+# ╔═╡ c040bca6-0c4d-4e35-9647-391576c03ff4
+example_a
+
 # ╔═╡ 1c34e642-12a2-4676-b013-82c3cf4a59a1
 string_compare(example_a[1], example_a[2], 
 	verbose=true, 
-	strip=[" "],
-	keep_case=false)
+	strip=[" ", "-", ",", "Unit"],
+	keep_case=false,
+	ignore_short=5
+)
 
 # ╔═╡ a4c430be-8abb-46b2-87cc-d8e0f5792278
+@bind text_1v TextField(default="Try a verbose example")
 
+# ╔═╡ e19b32c0-2850-47d8-b2cd-50dce11fb054
+@bind text_2v TextField(default="Try a non-concise example")
+
+# ╔═╡ 57839a61-dcba-48d0-af26-f21b438488cd
+@bind text_3v TextField(default="Or not")
+
+# ╔═╡ e7fef134-455f-44ba-b19a-d81ea9a04f23
+begin
+	interactive_example_v = [text_1v, text_2v, text_3v]
+	run_test(interactive_example_v, string_compare)
+end
+
+# ╔═╡ 7dbe3461-dbc8-429b-9a57-884af4dfbf18
+string_compare(text_1v, text_2v, 
+	verbose=true, 
+	strip=[" "],
+	keep_case=false,
+	ignore_short=4
+)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -247,9 +279,9 @@ PlutoUI = "~0.7.49"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.0-beta2"
+julia_version = "1.8.4"
 manifest_format = "2.0"
-project_hash = "502a5e5263da26fcd619b7b7033f402a42a81ffc"
+project_hash = "08cc58b1fbde73292d848136b97991797e6c5429"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -276,7 +308,7 @@ version = "0.11.4"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.2+0"
+version = "1.0.1+0"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -347,7 +379,7 @@ version = "1.10.2+0"
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [[deps.LinearAlgebra]]
-deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
+deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.Logging]]
@@ -372,7 +404,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2022.10.11"
+version = "2022.2.1"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
@@ -381,7 +413,7 @@ version = "1.2.0"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.21+0"
+version = "0.3.20+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
@@ -390,7 +422,7 @@ uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.5.2"
 
 [[deps.Pkg]]
-deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 version = "1.8.0"
 
@@ -433,28 +465,22 @@ version = "1.0.1"
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.SparseArrays]]
-deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
+deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-version = "1.9.0"
-
-[[deps.SuiteSparse_jll]]
-deps = ["Artifacts", "Libdl", "Pkg", "libblastrampoline_jll"]
-uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "5.10.1+0"
 
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
-version = "1.0.3"
+version = "1.0.0"
 
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-version = "1.10.0"
+version = "1.10.1"
 
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
@@ -480,12 +506,12 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.13+0"
+version = "1.2.12+3"
 
 [[deps.libblastrampoline_jll]]
-deps = ["Artifacts", "Libdl"]
+deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.2.0+0"
+version = "5.1.1+0"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -502,9 +528,9 @@ version = "17.4.0+0"
 # ╟─2954b96f-5204-476c-a5ff-acf6d002bfe4
 # ╠═e9e26fe7-a170-4481-941a-749f3a20bb2a
 # ╠═25fc2f12-8a34-11ed-00af-b19ec1200616
-# ╠═0b728942-74b1-4e3a-bed6-4e69b0407842
-# ╠═3799d6a3-8e7a-44a7-b8a0-5d25202d52e7
-# ╠═97999dd8-6f8d-45fa-8529-9d35163a1950
+# ╟─0b728942-74b1-4e3a-bed6-4e69b0407842
+# ╟─3799d6a3-8e7a-44a7-b8a0-5d25202d52e7
+# ╟─97999dd8-6f8d-45fa-8529-9d35163a1950
 # ╠═1a0ed19b-c3c2-488a-88bd-98888a4979b1
 # ╠═12600847-14df-4f4a-ba88-666427aed4af
 # ╠═553e7611-96c5-41df-878b-0d61cb6d2933
@@ -519,38 +545,43 @@ version = "17.4.0+0"
 # ╠═5882a15f-0363-4cec-be4a-43a4a4ca82dd
 # ╠═7d2ba81d-38e2-4d0b-bcae-91e016f126f7
 # ╠═65fdccc2-67d8-4f83-a5b6-81d49272aac8
-# ╠═7d7af72c-cca3-4540-a15c-ce73d163cfc9
+# ╟─7d7af72c-cca3-4540-a15c-ce73d163cfc9
 # ╟─dd35dc9d-693f-4365-ac80-afefb58cf5c3
-# ╠═71515660-04ce-400c-97d8-37e366aa6fc5
+# ╟─71515660-04ce-400c-97d8-37e366aa6fc5
 # ╠═980c5721-c897-42b5-8464-ea839102d923
 # ╠═cf6fd688-13e0-4c48-984b-01cf9eec91dc
 # ╟─072d1b33-d176-4df2-9c2a-f91b1f0f98cc
-# ╠═6c3e6b66-f1fa-4b5d-943a-384c52fcab60
+# ╟─6c3e6b66-f1fa-4b5d-943a-384c52fcab60
 # ╠═4d8f0de7-9c35-46ab-b7c4-ec3ca5e81d5c
 # ╠═620be601-5953-4baf-9f8b-74d35fe801d3
 # ╟─4ff0967b-8ceb-453f-b6c3-51fd0cdc22a0
-# ╠═277f9397-30d1-4ae3-841f-aee4905a9ac6
+# ╟─277f9397-30d1-4ae3-841f-aee4905a9ac6
 # ╠═c2503166-68f4-4606-b306-b96a6f1cc9e6
 # ╠═da2ccc49-9e72-40f3-ac06-a1b1cbc33f50
 # ╟─f9c96933-42d7-4a2e-bd06-5f5f5f2c83ff
-# ╠═0704eb6d-d798-40f6-8ad1-bf4f9eff65f6
+# ╟─0704eb6d-d798-40f6-8ad1-bf4f9eff65f6
 # ╠═2012d0d7-b376-4c5e-95bd-f62d22849ecf
 # ╠═4d32eebb-4e3f-430e-a1e9-d117284c4ccf
 # ╟─fa4d9739-f11b-4952-bf2b-38c1b882c5b6
 # ╟─dd163732-edf5-4e51-8784-a82e50b66d18
+# ╟─ffca7ed5-a50e-466a-9c66-b7f35fc1e62d
 # ╟─74dc476d-0e9b-42fa-aaeb-de4b8a6ce750
 # ╟─2e68f87c-dbda-4fe2-9735-35c2cf987ef7
 # ╟─65406e88-01ea-4d62-852f-5d41a8e88109
-# ╠═9373b74a-1df5-46fd-9d0d-005996c42a89
+# ╟─9373b74a-1df5-46fd-9d0d-005996c42a89
 # ╠═a84817be-5c80-4bd9-9e3c-248693713a69
 # ╠═a0e12250-8941-4bad-9b54-23d752597f0f
 # ╠═5ed5ff29-667d-490c-9f8c-9913dddbae56
 # ╠═3889985e-df9c-4b28-a059-9ea57993a575
-# ╠═8c987315-6a04-4f91-9e48-c6968c4157ae
-# ╠═e265cbb7-ed17-48eb-b3a1-9952affb312d
+# ╠═15e559aa-c5a7-4f15-8de8-5cbcea6ffbdc
 # ╟─2eabe02b-1f34-4789-a38d-b4162b47eb84
 # ╠═56cb357a-c691-4219-a28c-3b906b514446
+# ╟─c040bca6-0c4d-4e35-9647-391576c03ff4
 # ╠═1c34e642-12a2-4676-b013-82c3cf4a59a1
-# ╠═a4c430be-8abb-46b2-87cc-d8e0f5792278
+# ╟─a4c430be-8abb-46b2-87cc-d8e0f5792278
+# ╟─e19b32c0-2850-47d8-b2cd-50dce11fb054
+# ╟─57839a61-dcba-48d0-af26-f21b438488cd
+# ╠═e7fef134-455f-44ba-b19a-d81ea9a04f23
+# ╠═7dbe3461-dbc8-429b-9a57-884af4dfbf18
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

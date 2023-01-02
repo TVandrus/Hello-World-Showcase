@@ -1,9 +1,9 @@
 # dependencies.jl
-# updated v1.7.2 - 2022-07
+# updated v1.8.4 - 2023-01
 
 #using Core
 #using Base
-#using Pkg # access from REPL via ']' -> Ctrl+C
+#using Pkg # access from REPL via ']' 
 #Pkg.add('package_name')
 #Pkg.update('package_name')
 #Pkg.rm('package_name')
@@ -11,28 +11,22 @@
 
 
 # essentials
-using Base.Threads
-using Profiling
+using Base.Threads, Profiling
 using Dates
-using CategoricalArrays
-using SparseArrays
-using DataFrames
+using DataFrames, Pandas, CategoricalArrays 
 
 # mathematics/statistics
 using LinearAlgebra
 using StatsBase, Statistics
 
-
 # input/output
-using DelimitedFiles
-using CSV
-using TOML
-using Arrow
+using DelimitedFiles, CSV
+using Arrow, TOML
 
 # graphics
 using Plots 
 
-
 # miscellaneous
-using Pluto
+using Pluto, PlutoUI
 using PackageCompiler
+using PyCall
