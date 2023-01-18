@@ -1,0 +1,15 @@
+occ_cd,occ_short,occ_verbose,occ_organization,occ_sector
+o01,student,foundational student,,academic
+o02,student,specialized student,,academic
+o03,educator,lecturer,,academic
+o04,educator,administrator,,academic
+o11,producer,data miner,,industrial
+o12,producer,manager,,industrial
+o21,retail,sales,,commercial
+o22,retail,manager,,commercial
+o23,transit,driver,,commercial
+o24,transit,manager,,commercial
+o51,analytics,analyst,,derivative
+o51,analytics,manager,,derivative
+o91,family,homemaker,,society
+o92,family,retired,,society

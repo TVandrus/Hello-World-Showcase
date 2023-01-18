@@ -1,20 +1,16 @@
 
-using DataFrames 
+"""
+# census_summary.jl
 
-first_names = 
-last_names = 
-middle_inits = 
+current population ~550_000
+    50_000 university students
+    150_000 young students 
+    300_000 adults
+        200_000 working
+        100_000 at home or retired
 
+~200_000 residences
 
-function generate_population(n=100, id_seed=1000000, sources=[], configs=[])
+"""
 
-    entity_id
-    entity_type
-    full_name
-    f_name
-    l_name
-    mid_init 
-    dob 
-    address_id 
-    occup_id
-end 
+# census_generate.jl 

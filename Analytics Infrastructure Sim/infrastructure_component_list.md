@@ -8,18 +8,18 @@ pgAdmin 4 v6.14
 
 ## Pipeline Scripting 
 Python
-    v 3.10.7 
-    dagster==1.0.10
+    v 3.11.1 
+    dagster
     dagster_postgres 
     dagster_pandas 
     dagster_celery
-    dagit==1.0.10
-    dagster_dbt==0.16.10
-    dbt-core v1.2.1
+    dagit
+    dagster_dbt
+    dbt-core 
     dbt-postgres
     
-    psycopg2==2.9.3 
-    pandas==1.5.0
+    pandas
+    juliacall 
 
     import os 
     os.environ['PYTHON_JULIACALL_THREADS'] = '3'
@@ -31,7 +31,7 @@ Python
 
 ## Simulation/Analysis logic compute 
 Julia
-    v 1.8.1 
+    v 1.8.4 
     DataFrames.jl v1.3.6 
     Pandas.jl v1.6.1
     LibPQ.jl v1.14.0

@@ -29,7 +29,7 @@ The goal is to shoehorn several diverse tools into the process to build complexi
 Each simulated process can yield a full data life-cycle 
 
 Ideas: 
-    - take a census 
+    - take a census (citizens, districts, occupations)
     - industrial production (UXDM - Uxcestershire Data Mine) 
     - retail sales (UXFSI - Uxcestershire Financial Services Inc.) 
     - transit (TUX - Transit Uxcestershire) 

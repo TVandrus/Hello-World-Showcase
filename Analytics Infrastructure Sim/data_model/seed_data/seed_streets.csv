@@ -1,0 +1,13 @@
+str_id,str_name,str_num_begin,str_num_end,str_type
+s100,Suburb Crescent,100,500,residential
+s101,Falcons Drive,500,800,residential
+s102,Condor Court,800,1000,residential
+s103,Condominium Boulevard,3000,3600,residential
+s200,Data Quarry Road,1,101,industrial
+s201,Union Boulevard,1000,2000,industrial
+s300,Main Street,100,1000,commercial
+s301,Second Street,1000,2000,commercial
+s302,Market Place,500,2500,commercial
+s400,City Boulevard,0,800,other
+s401,University Avenue,300,600,other
+s402,Intercity Express 23,0,100,other
