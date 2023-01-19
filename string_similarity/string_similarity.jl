@@ -11,6 +11,12 @@ Empirically, random/independent strings ~0.40 on average, similar strings >0.85
 function string_compare(s1::String, s2::String; verbose::Bool=false,
                         strip::Array{String}=[" "], keep_case::Bool=false, 
                         ignore_short::Int=4)::Float64
+    """
+    s1, s2: arbitrary text strings to be compared for degree of similarity  
+    verbose: default False, whether to display info from intermediate calculations
+    strip: array of strings to strip from the given text before comparison
+    
+    """
     # Pre-Processing
     # remove spaces by default, allows arbitrary strings to be stripped away
     if length(strip) > 0
@@ -99,25 +105,7 @@ function string_compare(s1::String, s2::String; verbose::Bool=false,
     end    
 end
 
-s1 = "1313-123 Westcourt Place N2L 1B3"
-s2 = "Unit 1313 123 Westcourt Pl. N2L1B3"
-string_compare(s1, s2)
-
-#= basic scenario testing
-s1 = "martha"
-s2 = "marhta"
-
-s1 = "Mr. John Smith"
-s2 = "John M Smith"
-
-s1 = "Julie S Morin"
-s2 = "Julie T Morin"
-
-s1 = "1313-123 Westcourt Place N2L 1B3"
-s2 = "Unit 1313 123 Westcourt Pl. N2L1B3"
-
-s1 = "123 Falconridge Cres Kitchener ON N2K1B3"
-s2 = "123 Falconridge Crescent Kitchener ON N2K1B3"
-
-string_compare(s1, s2, verbose=true) 
-=#
+# s1 = "1313-123 Westcourt Place N2L 1B3"
+# s2 = "Unit 1313 123 Westcourt Pl. N2L1B3"
+# string_compare(s1, s2)
+# string_compare(s1, s2, verbose=true) 

@@ -1,6 +1,6 @@
 Attribute VB_Name = "StringSimilarity"
 
-Function string_similarity(ByVal s1 As String, ByVal s2 As String, Optional ByVal verbose As Boolean = False) As Double
+Function string_compare(ByVal s1 As String, ByVal s2 As String, Optional ByVal verbose As Boolean = False) As Double
     ' Custom string fuzzy matching on a scale of [0, 1]
     ' 0 => no similarity, 1 => exact match
     ' Empirically, random independently generated strings ~0.40 on average, similar strings >0.85
@@ -27,7 +27,7 @@ Function string_similarity(ByVal s1 As String, ByVal s2 As String, Optional ByVa
     
     ' short circuit if difference was stripped and exact matching works
     If s1 = s2 Then
-        string_similarity = 1
+        string_compare = 1
         Exit Function
     End If
 
@@ -50,7 +50,7 @@ Function string_similarity(ByVal s1 As String, ByVal s2 As String, Optional ByVa
     If L2 = 0 Or L2 <= short Then
         If verbose Then Debug.Print "short string"
         ' already tested for exact equality
-        string_similarity = 0
+        string_compare = 0
         Exit Function
     End If
     
@@ -90,9 +90,9 @@ Function string_similarity(ByVal s1 As String, ByVal s2 As String, Optional ByVa
     If verbose Then Debug.Print "matches - " & matches
     
     If matches = 0 Then
-        string_similarity = 0
+        string_compare = 0
     ElseIf matches = 1 Then
-        string_similarity = Round((1 / L1 + 1 / L2 + 1) / 3, 3)
+        string_compare = Round((1 / L1 + 1 / L2 + 1) / 3, 3)
     Else
         ' check for out-of-order matches
         transposes = 0
@@ -102,7 +102,7 @@ Function string_similarity(ByVal s1 As String, ByVal s2 As String, Optional ByVa
             End If
         Next n
         If verbose Then Debug.Print "transposes - " & transposes
-        string_similarity = Round((matches / L1 + matches / L2 + (matches - transposes) / matches) / 3, 3)
+        string_compare = Round((matches / L1 + matches / L2 + (matches - transposes) / matches) / 3, 3)
     End If
     
 End Function
@@ -116,5 +116,5 @@ Sub test()
     s1 = "mean"
     s2 = "mane"
     
-    MsgBox string_similarity(s1, s2, True)
+    MsgBox string_compare(s1, s2, True)
 End Sub

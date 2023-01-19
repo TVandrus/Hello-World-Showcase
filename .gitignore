@@ -1,2 +1,4 @@
+.vscode
 setup.ps1
 test_cargo/
+string_similarity_app/
