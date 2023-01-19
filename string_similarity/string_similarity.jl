@@ -108,22 +108,4 @@ end
 # s1 = "1313-123 Westcourt Place N2L 1B3"
 # s2 = "Unit 1313 123 Westcourt Pl. N2L1B3"
 # string_compare(s1, s2)
-
-#= basic scenario testing
-s1 = "martha"
-s2 = "marhta"
-
-s1 = "Mr. John Smith"
-s2 = "John M Smith"
-
-s1 = "Julie S Morin"
-s2 = "Julie T Morin"
-
-s1 = "1313-123 Westcourt Place N2L 1B3"
-s2 = "Unit 1313 123 Westcourt Pl. N2L1B3"
-
-s1 = "123 Falconridge Cres Kitchener ON N2K1B3"
-s2 = "123 Falconridge Crescent Kitchener ON N2K1B3"
-
-string_compare(s1, s2, verbose=true) 
-=#
+# string_compare(s1, s2, verbose=true) 

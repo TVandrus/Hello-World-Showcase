@@ -1,0 +1,4 @@
+name = "string_similarity_pkg"
+uuid = "afdacbf2-712e-4b09-98f0-a7a5157532ce"
+authors = ["TVandrus <T.Vandrus1@gmail.com>"]
+version = "0.1.0"
