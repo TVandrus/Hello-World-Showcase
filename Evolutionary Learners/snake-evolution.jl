@@ -156,6 +156,7 @@ using StatsBase, Plots
 Display a game State via terminal  
 """
 function draw(state::State)::Nothing
+
     world = copy(empty_world)
     world[state.food[1]+1, state.food[2]+1] = symbol.food
     for s in state.body
@@ -326,20 +327,20 @@ function move!(state::State)::State
                     (state.head[2] > world_param.cols), 
                     (state.head in state.body) ] )
     if state.crash
-        state.fitness -= 100
-    else
+        state.fitness += feedback.crash
+    else # didn't crash, move successful
         push!(state.body, state.head)
-        if state.head != state.food
+        state.fitness += feedback.survive 
+        if state.head != state.food 
             popfirst!(state.body)
-            state.fitness += 1
             # reward approaching food
             if sum(abs.(state.head - state.food)) < sum(abs.((state.head-state.dir)-state.food))
-                state.fitness += 1
+                state.fitness += feedback.approach
             elseif sum(abs.(state.head - state.food)) > sum(abs.((state.head-state.dir)-state.food))
-                state.fitness -= 1
+                state.fitness += feedback.avoid
             end
-            
-        else
+        else # got food 
+            state.points += 1 
             state.food = [rand(1:world_param.rows) rand(1:world_param.cols)]
             state.fitness += feedback.fed # multiply for escalating reward 
         end
@@ -353,8 +354,6 @@ Run a game start to finish
 Return outcome as raw data 
 """
 function run_game(brain::Brain, watch::Bool)::Array{Int32, 1}
-    # run a game start to finish
-    # return outcome
     state = State()
     if watch
         draw(state)
@@ -365,13 +364,13 @@ function run_game(brain::Brain, watch::Bool)::Array{Int32, 1}
         if watch
             draw(state)
         end
-        state = think!(state, brain)
-        state = move!(state)
-        
-        if state.time > (50 * (state.points+1))
+        if state.time > (feedback.idle_limit * (state.points+1))
             # terminate infinite loops, allow successful sneks more time
             state.crash = true
-            state.fitness -= (300 - 10*state.points)
+            state.fitness += (feedback.lazy + feedback.achieve*state.points)
+            if (feedback.lazy + feedback.achieve*state.points) > 0
+                @debug("timed out with lazy penalty offset by score achieved")
+            end
         end
     end
 
@@ -383,9 +382,6 @@ Run all games for all sneks, then select and mutate
 Return generational outcome and new generation
 """
 function run_generation(n_games::Int64, n_sneks::Int64, brains::Array{Brain, 1}, watch::Bool)::Tuple{Array{Float64, 1}, Array{Brain, 1}}
-    # run iterations for all sneks, then select and mutate
-    # return generational outcome and new generation
-
     outcomes = zeros(Int32, n_sneks, 3)
 
     @threads for s in 1:n_sneks
@@ -393,7 +389,7 @@ function run_generation(n_games::Int64, n_sneks::Int64, brains::Array{Brain, 1},
         # return aggregate outcome
         iter_outcomes = zeros(Int32, 3, n_games) # time, points, fitness
         for g in 1:n_games
-            iter_outcomes[:, g] = run_game(brains[s], watch && s==1)
+            iter_outcomes[:, g] = run_game(brains[s], watch && s==1 && g==1)
         end
         outcomes[s, :] = vec(sum(iter_outcomes, dims=2))
     end
@@ -457,9 +453,6 @@ Run all generations
 Track execution and learning progress over time, present summary of final learning outcomes 
 """
 function run_simulation(n_generations=sim_param.max_gen, n_games=sim_param.max_games, n_sneks=sim_param.sneks, watch_gen=sim_param.watch_gen)
-    # run all generations
-    # track progress over time
-    # present summary of outcomes
     brains = [Brain() for n in 1:n_sneks]
     
     println("Running independent games on ", Threads.nthreads(), " threads")
