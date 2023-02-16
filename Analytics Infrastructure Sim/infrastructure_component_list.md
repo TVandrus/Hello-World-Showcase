@@ -9,15 +9,11 @@ pgAdmin 4 v6.14
 ## Pipeline Scripting 
 Python
     v 3.11.1 
-    dagster
-    dagster_postgres 
-    dagster_pandas 
-    dagster_celery
-    dagit
-    dagster_dbt
-    dbt-core 
-    dbt-postgres
+    # issue with Python 3.11 & dagster & grpcio
+    pip install dagster dagit --find-links=https://github.com/dagster-io/build-grpcio/wiki/Wheels
     
+    dagster dagster_postgres dagster_pandas dagit dagster_dbt dbt-core dbt-postgres
+
     pandas
     juliacall 
 

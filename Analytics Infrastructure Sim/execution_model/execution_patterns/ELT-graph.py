@@ -25,7 +25,7 @@ source_map = {
     'B': {'n': 25, 'latency': 2}, 
     'C': {'n': 30, 'latency': 1}, 
     'D': {'n': 40, 'latency': 1}, 
-    #'E': {'n': 50, 'latency': 0}, 
+    'E': {'n': 50, 'latency': 0}, 
 }
 
 # async def extract_det(id, q, map):
@@ -47,60 +47,10 @@ source_map = {
 #     return dur 
 
 
-# def det_op_factory():
-#     op_map = source_map
-#     e_list = [] 
-#     l_list = [] 
-#     t_list = [] 
-#     queues = {
-#         'extract': asyncio.Semaphore(1), 
-#         'loading': asyncio.Semaphore(1), 
-#         'compute': asyncio.Semaphore(1), 
-#     }
-#     for x in op_map.keys():
-#         @dag.op(name=f'd_ext_{x}', ins={'n': dag.In(op_map[x]['n'])})
-#         async def ext():
-#             dlog.info(f"start ext_{x}, n={op_map[x]['n']}")
-#             task_log = await extract_det(id=x, q=queues['extract'], map=op_map)
-#             dlog.info(f'finished ext_{x}')
-#             return task_log
-#         fn = ext 
-#         e_list.append(fn)
-    
-#     for x in op_map.keys():
-#         @dag.op(name=f'd_load_{x}')
-#         async def ld(dep):
-#             dlog.info(f'start load_{x}')
-#             task_log = await loading_det(id=x, q=queues['loading'], map=op_map)
-#             dlog.info(f'finished load_{x}')
-#             return dep + task_log
-#         fn = ld
-#         l_list.append(fn)
-    
-#     for x in op_map.keys():
-#         @dag.op(name=f'd_cpu_{x}')
-#         async def comp(dep):
-#             dlog.info(f'start cpu_{x}')
-#             task_log = await compute_det(id=x, q=queues['compute'], map=op_map)
-#             dlog.info(f'finished cpu_{x}')
-#             return {x: dep + task_log}
-#         fn = comp
-#         t_list.append(fn)
-
-#     return e_list, l_list, t_list, queues
-
 
 @dag.op
 def display(dep):
     dlog.info(dep)
-
-# @dag.graph()
-# def det_dispatcher():
-#     e, l, t, q = det_op_factory()
-#     results = []
-#     for i in range(len(e)):
-#         results.append(t[i](l[i](e[i]())))
-#     display(results)
 
 
 async def extract_task(id, n=n_default):
@@ -129,7 +79,7 @@ def simple_op_factory():
     t_list = [] 
     for x in task_map.keys():
         
-        @dag.op(name=f'ext_{x}', tags={'dagster-celery/queue': 'extract_queue'})
+        @dag.op(name=f'ext_{x}', tags={'resource_queue': 'extract_queue'})
         async def ext():
             dlog.info(f'start ext_{x}, n={task_map[x]}')
             task_log = await extract_task(id=x, n=task_map[x])
@@ -139,7 +89,7 @@ def simple_op_factory():
         e_list.append(fn)
     
     for x in task_map.keys():
-        @dag.op(name=f'load_{x}', tags={'dagster-celery/queue': 'loading_queue'})
+        @dag.op(name=f'load_{x}', tags={'resource_queue': 'loading_queue'})
         async def ld(prev):
             dlog.info(f'start load_{x}')
             task_log = await load_task(prev)
@@ -149,7 +99,7 @@ def simple_op_factory():
         l_list.append(fn)
     
     for x in task_map.keys():
-        @dag.op(name=f'cpu_{x}', tags={'dagster-celery/queue': 'compute_queue'})
+        @dag.op(name=f'cpu_{x}', tags={'resource_queue': 'compute_queue'})
         async def comp(prev):
             dlog.info(f'start cpu_{x}')
             task_log = await compute_task(prev)
@@ -220,6 +170,7 @@ def simple_workflow():
         results.append(t[i](l[i](e[i]() ) ) )
     task_report(results) 
 
+
 @dag.graph
 def custom_workflow():
     compile = comp.alias('cpu_a')([])
@@ -245,7 +196,6 @@ def custom_workflow():
     report = comp.alias('cpu_r')([initialise, model_load])
 
 
-
 @dag.graph
 def ELT_pipeline_workflow():
     '''
@@ -259,7 +209,7 @@ def ELT_pipeline_workflow():
         ext.alias('extract_sales_lan')(), 
         ext.alias('extract_sales_queries')() 
         ]) 
-    run_compile = comp.alias('compute_init')([landing_data]) 
+    run_compile = comp.alias('compute_init')([]) 
     run_docs = comp.alias('compute_docs')([run_compile]) 
     seed_data = ld.alias('loading_seeds')(
         [comp.alias('compute_encode')(
@@ -295,40 +245,48 @@ def ELT_pipeline_workflow():
 def resources_repo():
     simple_job = simple_workflow.to_job(name='simple_job', 
        config={"execution": {"config":{"multiprocess": {"max_concurrent": 2}}}}) 
-    # simple_celery = simple_workflow.to_job(
-    #    name='simple_job_celery', 
-    #    executor_def=celery_executor,
-    #    config=yaml.safe_load(Path('celery_instance/celery_config.yaml').read_text())
-    # ) 
-    simple_queued = simple_workflow.to_job(name='simple_queued', 
-        config={"execution": {"config":{"multiprocess": {"max_concurrent": 4, 
+    simple_serial = simple_workflow.to_job(name='simple_job_serial', executor_def=dag.in_process_executor) 
+    simple_queued = simple_workflow.to_job(name='simple_job_queued', 
+        config={"execution": {"config":{"multiprocess": {"max_concurrent": 3, 
+            "tag_concurrency_limits": [
+                {"key": "resource_queue", "value": "extract_queue", "limit": 1}, 
+                {"key": "resource_queue", "value": "loading_queue", "limit": 1}, 
+                {"key": "resource_queue", "value": "compute_queue", "limit": 2}, 
+            ],
+       }}}})
+
+    custom_job = custom_workflow.to_job(name='custom_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 2}}}}) 
+    custom_serial = custom_workflow.to_job(name='custom_job_serial', executor_def=dag.in_process_executor) 
+    custom_queued = custom_workflow.to_job(name='custom_job_queued', 
+        config={"execution": {"config":{"multiprocess": {"max_concurrent": 2, 
             "tag_concurrency_limits": [
                 {"key": "resource_queue", "value": "extract_queue", "limit": 1}, 
                 {"key": "resource_queue", "value": "loading_queue", "limit": 1}, 
                 {"key": "resource_queue", "value": "compute_queue", "limit": 1}, 
             ],
        }}}})
-    
-    custom_job = custom_workflow.to_job(name='custom_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 3}}}}) 
-    custom_serial = custom_workflow.to_job(name='custom_job_serial', executor_def=dag.in_process_executor) 
-    ELT_job = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 4}}}})
+
+    ELT_job = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job', config={"execution": {"config":{"multiprocess": {"max_concurrent": 3}}}})
     ELT_serial = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job_serial', executor_def=dag.in_process_executor)
-    # ELT_celery = ELT_pipeline_workflow.to_job(
-    #     name='ELT_pipeline_job_celery', 
-    #     executor_def=celery_executor, 
-    #     config=yaml.safe_load(Path('celery_instance/celery_config.yaml').read_text())
-    # )
+    ELT_queued = ELT_pipeline_workflow.to_job(name='ELT_pipeline_job_queued', 
+        config={"execution": {"config":{"multiprocess": {"max_concurrent": 3, 
+            "tag_concurrency_limits": [
+                {"key": "resource_queue", "value": "extract_queue", "limit": 2}, 
+                {"key": "resource_queue", "value": "loading_queue", "limit": 1}, 
+                {"key": "resource_queue", "value": "compute_queue", "limit": 2}, 
+            ],
+       }}}})
+    
 
     return [simple_workflow 
         , simple_job 
         , simple_queued 
-        #simple_celery 
-         #det_dispatcher
         , custom_workflow 
         , custom_job 
         , custom_serial 
+        , custom_queued 
         , ELT_pipeline_workflow 
         , ELT_job 
         , ELT_serial 
-        #, ELT_celery 
+        , ELT_queued 
     ]
