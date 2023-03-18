@@ -1,6 +1,9 @@
 import dagster as dag
 import sqlalchemy as sqa
 import pandas as pd 
+import pyarrow as pa 
+import pyarrow.feather as pf
+import pyarrow.parquet as pq
 import asyncio, sys, os, shutil, subprocess, logging
 
 
@@ -73,10 +76,8 @@ class DataPipe:
     applies opinionated defaults for convenience/consistency, otherwise pick your own options: https://pandas.pydata.org/docs/reference/index.html  
     """
     def __init__(self): 
-        self.src_name: str = ''
+        self.src_name: str = 'data-pipe'
         self.src_format = None # one of storage_types 
-        self.dest_name: str = ''
-        self.dest_format = None # one of storage_types 
         self.obj = None # data object represented by rows and columns 
         self.obj_format: str = 'uninit' # one of mem_types
         return self
@@ -84,24 +85,23 @@ class DataPipe:
     def __init__(self, metadata: dict):
         self.src_name: str = metadata.get('src_name', 'data')
         self.src_format = metadata.get('src_format') # one of storage_types 
-        self.dest_name: str = metadata.get('dest_name', self.src_name)
-        self.dest_format = metadata.get('dest_format') # one of storage_types 
         self.obj = metadata.get('obj') # data object represented by rows and columns 
         self.obj_format: str = metadata.get('obj_format') # one of mem_types
         return self
         
     store_types = set(
         'csv', # convenient, inefficient
-        'excel', # convenient, situational 
+        #'excel', # convenient, situational 
         'feather', # performant, scalable 
         'parquet', # performant, scalable 
-        'sql' # convenient 
+        #'sql' # convenient 
         )
     mem_types = set(
         'arrow', # performant, potentially large mem size 
         'df', # convenient, compatible 
         'df_lazy', # convenient, situational 
-        'pickle' # convenient, situational 
+        #'pickle', # convenient, situational 
+        #'uninit', 
         )
 
 
@@ -151,19 +151,44 @@ class DataPipe:
         pipe = DataPipe(metadata=md)
         return pipe 
 
-    # excel_to_arrow 
-    # excel_to_df 
     # feather_to_arrow 
+    def feather_to_arrrow(file_name, search_path=None, col_spec=None): 
+        md = dict() 
+        full_path = (search_path if search_path else '') + file_name
+        md['src_name'] = file_name
+        md['src_format'] = 'feather'
+        md['obj'] = pf.read_table(source=full_path, 
+            columns=col_spec, 
+        )
+        md['obj_format'] = 'arrow'
+        return DataPipe(metadata=md)
+
     # feather_to_df 
+    def feather_to_df(file_name, search_path=None, col_spec=None): 
+        md = dict() 
+        full_path = (search_path if search_path else '') + file_name
+        md['src_name'] = file_name
+        md['src_format'] = 'feather'
+        md['obj'] = pf.read_feather(path=full_path, 
+            columns=col_spec, 
+        )
+        md['obj_format'] = 'arrow'
+        return DataPipe(metadata=md)
+
     # parquet_to_arrow 
+    def parquet_to_arrow(file_name, search_path=None, col_spec=None):
+        md = dict()
+        full_path = (search_path if search_path else '') + file_name
+        md['src_name'] = file_name
+        md['src_format'] = 'parquet'
+        md['obj'] = pq.read_table(source=full_path, columns=col_spec) 
+        md['obj_format'] = 'arrow'
+        return DataPipe(metadata=md)
 
     # parquet_to_df 
     def parquet_to_df(file_name, search_path=None, col_spec=None):
         md = dict()
-        if search_path:
-            full_path = search_path + file_name
-        else: 
-            full_path = file_name
+        full_path = (search_path if search_path else '') + file_name
         md['src_name'] = file_name
         md['src_format'] = 'parquet'
         md['obj'] = pd.read_parquet(filepath_or_buffer=full_path, 
@@ -171,9 +196,10 @@ class DataPipe:
             columns=col_spec, use_nullable_dtypes=True
         )
         md['obj_format'] = 'df'
-        pipe = DataPipe(metadata=md)
-        return pipe
+        return DataPipe(metadata=md)
 
+    # excel_to_arrow 
+    # excel_to_df 
     # sql_to_arrow 
     # sql_to_df 
 
@@ -181,17 +207,63 @@ class DataPipe:
     ########## swap in-memory 
 
     # arrow_to_df 
-    # df_to_arrow 
-    # df_to_pickle 
-    # pickle_to_arrow 
+    def arrow_to_df(pipe):
+        assert pipe.obj_format == 'arrow' 
+        md = dict()
+        md['src_name'] = pipe.src_name
+        md['src_format'] = pipe.obj_format 
+        md['obj'] = pipe.obj.to_pandas()
+        md['obj_format'] = 'df' 
+        return DataPipe(metadata=md)
 
+    # df_to_arrow 
+    def df_to_arrow(pipe): 
+        assert pipe.obj_format in ('df','df_lazy')
+        md = dict() 
+        md['src_name'] = pipe.src_name
+        md['src_format'] = pipe.obj_format 
+        md['obj'] = pa.Table.from_pandas(pipe.obj, preserve_index=False)
+        md['obj_format'] = 'arrow' 
+        return DataPipe(metadata=md)
+    
     
     ########## load from memory to storage 
     
-    # arrow_to_feather
-    # arrow_to_parquet 
-    # arrow_to_sql 
     # df_to_csv 
+    def df_to_csv(pipe, file_name, dest_path=None, append=False): 
+        assert pipe.obj_format == 'df' 
+        pipe.obj: pd.DataFrame .to_csv(path_or_buf=(dest_path+file_name+'.csv'), mode=('a' if append else 'w'), 
+            header=True, index=False, encoding='utf-8',
+        )
+        return None 
+
+    # arrow_to_feather
+    def arrow_to_feather(pipe, file_name, dest_path=None):
+        full_path = (dest_path if dest_path else '') + file_name
+        pf.write_feather(df=pipe.obj, dest=full_path, compression='lz4')
+        return None 
+
+    # df_to_feather
+    def df_to_feather(pipe, file_name, dest_path):
+        full_path = (dest_path if dest_path else '') + file_name
+        pd.DataFrame.to_feather(self=pipe.obj, path=full_path, 
+            compression='lz4'
+            )
+        return None 
+
+    # arrow_to_parquet 
+
     # df_to_parquet 
+    def df_to_parquet(pipe, file_name, dest_path, partition_val_cols=None): 
+        assert pipe.obj_format == 'df' 
+        full_path = (dest_path if dest_path else '') + file_name
+        pipe.obj:pd.DataFrame .to_parquet(path=full_path, index=False,
+            engine='pyarrow', compression='zstd',
+            partition_cols=partition_val_cols
+            )
+        return None 
+
+    # arrow_to_sql 
     # df_to_sql 
+
 
