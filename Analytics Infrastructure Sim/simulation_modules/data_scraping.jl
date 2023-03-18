@@ -7,50 +7,79 @@ using Gumbo, Cascadia, HTTP, AbstractTrees
 using Pluto, Plots 
 
 
-# configs 
-tng_src_url = "https://www.tangerine.ca/en/rates/historical-rates"; 
-tng_target_series = [
-    "isacad", 
-    #"mortgage5yrfixed", 
-    #"mortgage5yrvariable", 
-    #"ingprimerate", 
-    #"gic1yr", 
+mcu_src_url = "https://www.meridiancu.ca/personal/rates-and-fees";
+
+mcu_targets = [
+    "mortgages"=>"/html/body/main/section[1]/div/div[2]/div[2]",
+    "gics"=>"/html/body/main/section[1]/div/div[3]/div[2]"
 ]
+rq = HTTP.get(mcu_src_url);
+rq_parsed = parsehtml(String(rq.body)).root; # :HTML
+node = rq_parsed[2]; # :body 
+node = node[2][3][1] # main/section/div
 
-rq = HTTP.get(tng_src_url)
-rq_parsed = parsehtml(String(rq.body)).root # :HTML
-rq_parsed[2] # :body 
-fieldnames(typeof(rq_parsed))
-rq_parsed[2].children[7].children[2].children[1].children[1].children[1].children[3].children[2].children[1].children[1].children[1]
+dataset = [];
 
-for elem in PreOrderDFS(rq_parsed)
-    try 
-        if tag(elem) == :div && elem.attributes["data-type"] == "mortgage5yrvariable"
-            println(elem)
+# fixed mortgages
+table = node[3][2][1][2][1][1][2].children
+for row in table
+    content = (product=row[3][1].text, posted=row[1][1].text, special=row[2][1].text)
+    push!(dataset, content);
+end
+
+# variable 
+table = node[3][2][4][2][1][1][2].children
+for row in table
+    content = (product=row[2][1].text, posted=row[1][1].text)
+    push!(dataset, content);
+end
+
+#GICs 
+table = node[4][2].children
+row = table[2]
+record = row[2][1][2][2][1].children
+record[2][1].text
+for row in table[[1,2,8,11]]
+    record = row[2][1][2][2][1].children
+    content = (product=record[2][1].text, posted=record[1][1].text)
+    push!(dataset, content);
+end
+
+dataset
+
+
+tng_src_url = "https://www.tangerine.ca/en/rates/mortgage-rates"; 
+
+#prime rate 
+#/html/body/div/section/section/div[2]/div[1]/div/div/h3/span
+
+rq = HTTP.get(tng_src_url);
+rq_parsed = parsehtml(String(rq.body)).root[2] # :body 
+
+for ele in PreOrderDFS(rq_parsed)
+    try
+        if tag(ele) == :span 
+            println(ele)
+            if attr(ele)["data-toggle"] == "rate"
+                println("!!!!!")
+            end
         end
     catch
     end
 end
 
-# return first of list (of 1) of divs matching data-type
-s1 = h -> eachmatch(sel"div[data-type*=isacad]", h); 
-ulist = s1(rq_parsed[2])[1] # returns one :ul
 
-tag(ulist) == :ul && ulist.attributes["class"] == "list--withTextRight__uList"
+#prime
+primerate = rq_parsed[7][1][1][2]
+node = primerate[1][1][1][1][2].attributes
+nodevalue(node)
 
-s2 = h -> eachmatch(sel"li", h)
-listitems = s2(ulist)[1] # returns two span
-fieldnames(typeof(listitems.children[1]))
+<span data-toggle="rate" data-type="mortgage5yrvarlatest">6.65%</span>
+<span data-toggle="rate" data-type="mortgage5yrvarlatest">6.65%</span>
+#\35 yearvarblock > div.rate > span
+document.querySelector("#\\35 yearvarblock > div.rate > span")
+//*[@id="5yearvarblock"]/div[2]/span
+/html/body/div/section/section/div[3]/div[1]/div[2]/div[1]/div[2]/span
 
-print(listitems.children)
-print(listitems.children[1])
-
-/html/body/div/section[2]/div/div/div[1]/div[2]/div[1]/ul/li[2]/span[1]
-<span class="list--withTextRight__itemContent">July 1, 2022</span>
-
-
-target = sel"#mainContentSection > div > div > div.viewport--padded > div.body--2.viewport--full > div:nth-child(2) > ul > li:nth-child(1)"
-s3 = h -> eachmatch(target, h)
-elem = s3(rq_parsed)
-
-println(AbstractTrees.children(listitems)[1])
+nodelist = rq_parsed.children
+nodelist[7][1][1][2][1][1][1][1][2]
