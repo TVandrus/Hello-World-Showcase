@@ -1,4 +1,4 @@
-# Intermediary Formats for Data
+# Intermediary Formats for Data Pipeline
 2023-02
 
 - need to have data exist other than the organized source system (for consumption, analysis, transformation, or transfer) 
@@ -6,20 +6,22 @@
 - attempt to note important characteristics that make a format suitable/unsuitable for a given application 
 - attempt to provide reproducible comparisons of relevant examples to test across different hardware 
 
+
 ## Key Factors: 
 
 - object size on-disk 
-- bulk writes
-- bulk reads
-- complex reads/subsets 
-- complex writes/partial updates 
+- bulk writes/reads (full table)
+- complex reads (subsets) 
+- complex writes (conditional updates, appending) 
 - in-memory footprint 
 - compute requirements 
 - languages w encode/decode support 
-- interoperability 
+- interoperability & preservation of features 
 
 
 https://betterdatascience.com/top-csv-alternatives/ 
+https://towardsdatascience.com/demystifying-the-parquet-file-format-13adb0206705
+
 
 ~2GB
 source = "S:/Datasets & Projects/NY Parking Violations/Parking_Violations_Issued_-_Fiscal_Year_2019.csv"

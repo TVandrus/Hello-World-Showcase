@@ -1,8 +1,43 @@
 Simulation outlines
 PDA-format
 
+# Design/Roadmap
 
-# Census of Uxcestershire
+Sources -> Ingest to workspace -> Src -> Simulation preprocess -> Simulation generate -> Load/Update analytics workspace -> Analysis
+
+Sources 
+    requires: ideas/definitions
+    materialized: folder of local files
+    result: ready for ingest to pipeline workspace 
+
+Src 
+    requires: extract from Sources, assert minimal standards 
+    materialized: persistent, allow concurrent reads
+    result: accessible in catalog of tables
+
+Simulation preprocess/initialization 
+    requires: Src data, schema/normalization logic
+    materialization: high bulk-write throughput, fast query-subset performance (indexed?)
+    result: all inputs needed to initialize the simulation processes
+
+Simulation generate 
+    requires: logic to represent Uxcestershire processes from staged data 
+    materialization: high-performance read->assemble->write loop for activity records (portable/in-process DB, or in-memory)
+    result: activity records loaded to analytics workspace
+
+Load/Update analytics workspace 
+    requires: activity records from simulation 
+    materialization: optional performance/caching layer 
+    result: cataloged write-once-read-many data store 
+
+Analysis
+    requires: activity records from processes in-context 
+    materialization: visuals in notebook/dashboard format 
+    result: tell a story
+
+
+# Modules
+## Census of Uxcestershire
 Purpose: 
     census, with disorganised, ambiguous, duplicated, or erroneous data 
     establish process for generating rich population
@@ -37,3 +72,5 @@ Analysis: determine unique individuals and store enriched records
     - derive noisy extracts 
     - attempt to de-noise and recreate original
     - query and display results
+
+
