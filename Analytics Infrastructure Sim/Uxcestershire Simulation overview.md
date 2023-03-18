@@ -9,11 +9,8 @@ Purpose: tech showcase to test interoperability of many elements of a modern dat
 
 ## Components: 
 
-The goal is to shoehorn several diverse tools into the process to build complexity, without creating undue complications.
-
-### Persistent data written to and retrieved from data storage instance of choice 
-
-- locally-hosted PostgreSQL server instance 
+The goal is to shoehorn several diverse tools into the process to build complexity, without creating undue complications. 
+'Complications' impair clarity, robustness, or scalability.
 
 
 ### dagster deployment to orchestrate/execute the pipeline from setup to consumption
@@ -26,16 +23,17 @@ The goal is to shoehorn several diverse tools into the process to build complexi
 
 ### Simulation logic written in Julia scripts, given state returns next state
 
-Each simulated process can yield a full data life-cycle 
+Each simulated process could yield a full data life-cycle 
 
 Ideas: 
-    - take a census (citizens, districts, occupations)
-    - industrial production (UXDM - Uxcestershire Data Mine) 
-    - retail sales (UXFSI - Uxcestershire Financial Services Inc.) 
+    - take a census (Persons, districts, occupations)
+    - commercial production (UXDM - Uxcestershire Data Mine Corp)
+        - product development 
+        - retail sales 
+        - financial investments 
     - transit (TUX - Transit Uxcestershire) 
-    - utilities/infrastructure 
-    - economy/market 
-    - weather 
+    - economy/market (UXX - Uxcestershire Exchange)
+    - weather (UXMC - Uxcestershire Meteorological Centre)
 
 ### dbt data model to produce consumable extracts
 

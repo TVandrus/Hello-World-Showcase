@@ -5,34 +5,65 @@ PDA-format
 
 Sources -> Ingest to workspace -> Src -> Simulation preprocess -> Simulation generate -> Load/Update analytics workspace -> Analysis
 
-Sources 
+## Raw Data Sources 
     requires: ideas/definitions
     materialized: folder of local files
     result: ready for ingest to pipeline workspace 
+        - ux/rawdata/
 
-Src 
+## Cleaned Data Samples 
     requires: extract from Sources, assert minimal standards 
     materialized: persistent, allow concurrent reads
-    result: accessible in catalog of tables
+        - database? 
+        - filestore? 
+    result: accessible catalog of tables
+        - ux.src
+        - name parts
+        - address parts 
+        - transit/trip records 
+        - retail/sales records 
+        - asset price records 
+        - git contribution records 
+        - effective dates (start, end, step_length) 
+            - 2010-2020?
+        - world conditions by date (weather, holidays, daylight, or overall activity-level index from parking violations/trade volume?)
 
-Simulation preprocess/initialization 
-    requires: Src data, schema/normalization logic
-    materialization: high bulk-write throughput, fast query-subset performance (indexed?)
+## Simulation preprocess/initialization 
+    requires: Src data, schema/normalization logic 
+        - Person = uxid, name, occupation, [demographic: age, address, income]
+        - Address = id, unit, street_num, street_name, [district, post_code, geospatial] 
+        - 
+    materialization: high bulk-write throughput, fast query-subset performance 
+        - dbt on Postgres?
     result: all inputs needed to initialize the simulation processes
+        - ux.input
+        - data to generate Persons w uxid
+        - mapping or corpus for any attributes [occupation, occupation org, income, address]
+        - corpus of activity records to sample from 
+        - event schedule/trigger generator 
+            - random activity suggested each step, accept/reject on propensity
+        - Person-event propensity/matching
 
-Simulation generate 
+## Simulation generate 
     requires: logic to represent Uxcestershire processes from staged data 
-    materialization: high-performance read->assemble->write loop for activity records (portable/in-process DB, or in-memory)
-    result: activity records loaded to analytics workspace
+    materialization: high-performance [query-read -> assemble -> write] loop for activity records 
+        - portable DB SQLite?
+        - in-process DB DuckDB?
+        - in-memory tables Arrow/Feather?
+    result: activity records ready to load to analytics workspace
+        - ux.stage
 
-Load/Update analytics workspace 
+## Load/Update analytics workspace 
     requires: activity records from simulation 
     materialization: optional performance/caching layer 
+        - indexed on date, record_id, Person uxid 
     result: cataloged write-once-read-many data store 
+        - ux.output
 
-Analysis
+## Analysis
     requires: activity records from processes in-context 
     materialization: visuals in notebook/dashboard format 
+        - Pluto.jl 
     result: tell a story
 
 
