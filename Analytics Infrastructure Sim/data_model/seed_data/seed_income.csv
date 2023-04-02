@@ -1,7 +1,0 @@
-inc_cd,inc_short,inc_verbose,inc_low,inc_high
-i0,nothing,no income,0,0
-i1,part-low,irregular,1000,12000
-i2,low,unskilled,12000,36000
-i3,med,skilled-entry,36000,60000
-i4,high,skilled-experienced,60000,120000
-i5,ultra-high,senior,120000,1000000
