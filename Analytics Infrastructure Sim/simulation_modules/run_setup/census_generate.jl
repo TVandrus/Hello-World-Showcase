@@ -11,7 +11,7 @@ Municipality of Uxcestershire:
         ~250_000 residential units 
 """
 
-using Dates, CSV, Parquet, Parquet2, DataFrames 
+using Dates, CSV, Parquet2, DataFrames 
 
 # prerequisite: wrangle raw data into valid/semi-structured form in ux_src/ 
 setup_path = "S:/Datasets & Projects/LocalRepo/Sample-Projects/Analytics Infrastructure Sim/simulation_modules/run_setup";
@@ -28,30 +28,30 @@ readdir() # ux_src/, ux_input/
     # 5 container for record of activities 
 
 # pre-defined conveniences/utilities
-struct Person
-    ux_id::Integer 
-    first_name::String 
-    last_name::String 
-    bth_date::Date 
-    occup_cd::String 
-    #address_id::Integer 
-end
+    struct Person
+        ux_id::Integer 
+        first_name::String 
+        last_name::String 
+        bth_date::Date 
+        occup_cd::String 
+        #address_id::Integer 
+    end
 
-struct Asset 
-    asset_id::String 
-    prc_date::Date 
-    prc_open::Float64 
-    prc_close::Float64 
-    asset_return::Float64 
-end
+    struct Asset 
+        asset_id::String 
+        prc_date::Date 
+        prc_open::Float64 
+        prc_close::Float64 
+        asset_return::Float64 
+    end
 
-function pq_date(d::Date)::Int32 
-    #=
-    Signed Int32 relative to Unix Epoch  
-    Used for Parquet 
-    =#
-    return Dates.value(d - Date(1970, 1, 1))
-end
+    function pq_date(d::Date)::Int32 
+        #=
+        Signed Int32 relative to Unix Epoch  
+        Used for Parquet 
+        =#
+        return Dates.value(d - Date(1970, 1, 1))
+    end
 
 
 ##################################################
@@ -100,7 +100,7 @@ end
 
 
 # take a census to discover the population 
-    src_names = CSV.File("full_names.csv");
+    src_names = CSV.File("ux_src/full_names.csv");
 
     function ux_census(
             n::Integer = 50_000, 
@@ -135,24 +135,25 @@ end
             push!(census, p)
         end
         # convert vector of tuples to column-accessible Table
-        return DataFrame(census) 
+        return census 
     end
 
-    census_tbl = ux_census();
+    census_tbl = DataFrame(ux_census());
     summary(census_tbl)
     census_tbl[1:10, :]
-    census_tbl.bth_date = pq_date.(census_tbl.bth_date); # dates for parquet standard
-    write_parquet("ux_input/census.parquet", census_tbl, compression_codec="ZSTD") 
-
+    #census_tbl.bth_date = pq_date.(census_tbl.bth_date); # dates for parquet standard
+    #write_parquet("ux_input/census.parquet", census_tbl, compression_codec="ZSTD") 
+    Parquet2.writefile("ux_input/census.parquet", census_tbl, compression_codec=:uncompressed);
     check = DataFrame(Parquet2.readfile("ux_input/census.parquet"))
+    describe(check)
 
 
 # generate/pre-calculate market returns for a basket of assets to cover the full simulation period 
     setup_path = "simulation_modules/run_setup"; 
     cd(setup_path);
     sim_dates = DataFrame(Parquet2.readfile("ux_input/date_labels.parquet"));
-    summary(sim_dates)
     market_days = filter(x -> x[:bus_date], sim_dates); 
+    describe(market_days)
 
     src_path = "ux_src/market_prices/";
     readdir(src_path)
@@ -165,7 +166,7 @@ end
     dfmt = dateformat"mm/dd/yy"
     price_history::Vector{Asset} = [];
 
-    for f in readdir()#[1:1]
+    for f in readdir()
         dat = DataFrame(CSV.File(f))
         asset_id = split(f, "-")[1]
         asset_history::Vector{Asset} = []
@@ -194,7 +195,7 @@ end
                 mrw.julia_date, 
                 filler.prc_close, 
                 filler.prc_close, 
-                0.0
+                1.0
             ) 
             push!(asset_history, cln)
         end
