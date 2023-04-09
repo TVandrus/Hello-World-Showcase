@@ -208,9 +208,3 @@ end
     check = DataFrame(Parquet2.readfile("ux_input/market_history.parquet"));
     describe(check)
     unique(check.asset_id)
-
-
-# define trading-decision logic (move to module later)
-    # naive: independent uniform random choice of asset daily 
-    # personality: weighted independent choices daily seeded on 'investor profile'
-    # behaviour: markov process selection, weighted by the previous choice and/or outcome 
