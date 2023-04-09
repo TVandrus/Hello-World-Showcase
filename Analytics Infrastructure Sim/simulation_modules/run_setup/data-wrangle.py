@@ -36,4 +36,3 @@ for f in prices:
 
 compiled = pandas.concat(results, axis=0)
 compiled.to_csv('prices_combined.csv')
-

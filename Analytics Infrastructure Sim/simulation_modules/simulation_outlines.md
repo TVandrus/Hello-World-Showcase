@@ -5,6 +5,8 @@ PDA-format
 
 Sources -> Ingest to workspace -> Src -> Simulation preprocess -> Simulation generate -> Load/Update analytics workspace -> Analysis
 
+ux_rawdata -> ux_src -> ux.input -> ux.stage -> ux.output
+
 ## Raw Data Sources 
     requires: ideas/definitions
     materialized: folder of local files
