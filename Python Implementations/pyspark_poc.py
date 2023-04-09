@@ -72,7 +72,7 @@ pqdf.write.parquet(path="pyspark_write.file")
 
 
 import pyspark.files as psf
-ps.
+
 
 ps.SparkFiles.get()
 

@@ -65,7 +65,7 @@ Data storage format for modern data workflows.
 - efficient compression options
 - mix of bandwidth and compute for bulk read/write 
 - very efficient querying reads 
-- partial writes?
+- partial writes only by partition
 - optimized for on-disk persistent storage 
 - moderate compute overhead 
 - broad encode/decode support w Python & AWS (Tableau?) 

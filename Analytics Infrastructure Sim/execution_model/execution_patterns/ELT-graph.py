@@ -20,34 +20,6 @@ task_map = {
     'e': 30,
 }
 
-source_map = {
-    'A': {'n': 20, 'latency': 2}, 
-    'B': {'n': 25, 'latency': 2}, 
-    'C': {'n': 30, 'latency': 1}, 
-    'D': {'n': 40, 'latency': 1}, 
-    'E': {'n': 50, 'latency': 0}, 
-}
-
-# async def extract_det(id, q, map):
-#     async with q:
-#         dur = map[id]['n'] / 4 + map[id]['latency'] 
-#         await asyncio.sleep(dur)
-#     return dur 
-
-# async def loading_det(id, q, map):
-#     async with q:
-#         dur = map[id]['n'] / 2 
-#         await asyncio.sleep(dur)
-#     return dur 
-
-# async def compute_det(id, q, map):
-#     async with q: 
-#         dur = (map[id]['n'] / 8) ** 2 + 1
-#         await asyncio.sleep(dur)
-#     return dur 
-
-
-
 @dag.op
 def display(dep):
     dlog.info(dep)
@@ -280,6 +252,7 @@ def resources_repo():
 
     return [simple_workflow 
         , simple_job 
+        , simple_serial 
         , simple_queued 
         , custom_workflow 
         , custom_job 
