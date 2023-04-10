@@ -14,7 +14,6 @@ pg_engine = sqlalchemy.engine.URL(
     port=5432,
     database='development_db', 
     username='dev_user', password='dev_user', # Don't do this 
-
 )
 
 sqlalchemy.create_engine("postgresql+psycopg2://dev_user:dev_user@localhost/development_db", use_insertmanyvalues=False)
@@ -27,11 +26,12 @@ for f in os.listdir("run_setup/ux_input/"):
     df.to_sql(name=table_name, schema="ux_input", con=pg_engine, if_exists='append', index=False)
 
 
-for f in os.listdir("run_simulation/ux_stage/"):
-    table_name = f.split(sep=".")[0] 
-    df = pd.read_parquet(path="run_simulation/ux_stage/"+f) 
-    print(f"{table_name} - {df.dtypes}")
-    df.to_sql(name=table_name, schema="ux_stage", con=pg_engine, if_exists='append', index=False, chunksize=100_000)
+# data too large to handle, see Julia implementation
+# for f in os.listdir("run_simulation/ux_stage/"):
+#     table_name = f.split(sep=".")[0] 
+#     df = pd.read_parquet(path="run_simulation/ux_stage/"+f) 
+#     print(f"{table_name} - {df.dtypes}")
+#     df.to_sql(name=table_name, schema="ux_stage", con=pg_engine, if_exists='append', index=False, chunksize=100_000)
 
 
 
