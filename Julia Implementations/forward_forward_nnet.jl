@@ -25,11 +25,14 @@ for each labelled data point
         such that an actual observation of 1 will lead to a high actual objective, and a similarly low flipped objective
         an actual observation of 0 should lead to a low actual objective, and a high flipped objective
         if a weight contributes +ve for 1, but also equally +ve for 0, then the difference is nothing, and the weight will be updated towards nothing, because it should be ignored/adds no value
+            w * 0.99
         if a weight contributes high contrast/discriminatory value, then it will be amplified 
+            w * 1.01
         if a weight contributes reversed contrast/discriminatory value, then it will be negated
+            w * -1.01 
     output the activations
         if the next layer is another hidden layer
-            normalize/constrain the magnitude of the activations (sigmoid?) so that the strength of each activation is not providing clues for th
+            normalize/constrain the magnitude of the activations (sigmoid?) so that the strength of each activation is not providing clues
         if the next layer is output 
             apply output transformation 
 =#
