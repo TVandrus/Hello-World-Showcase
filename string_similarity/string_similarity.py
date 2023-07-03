@@ -106,25 +106,3 @@ s2 = "123 Falconridge Crescent Kitchener ON N2K1B3"
 
 string_compare(s1, s2, verbose=true) 
 """
-
-"""
-# performance testing
-using Random, StatsBase, Base.Threads
-
-string_compare("test", "string", verbose=true)
-
-n = 100000
-l = 100
-results = zeros(n)
-@time begin
-    @threads for i in 1:n
-        results[i] = string_compare(randstring("abcdefghijklmnopqrstuvwxyz0123456789 ", l),
-                                    randstring("abcdefghijklmnopqrstuvwxyz0123456789 ", l))
-    end
-end
-summarystats(results)
-
-# performance test: 100k comparisons of random 100-char strings
-# original: 10s, 257M alloc, 15 GiB, 40% gc
-# type annotated: 9s 150M alloc, 13 GiB, 40% gc
-"""
