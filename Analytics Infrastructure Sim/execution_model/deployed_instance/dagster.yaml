@@ -21,6 +21,7 @@ run_coordinator:
   class: QueuedRunCoordinator
   config:
     max_concurrent_runs: 1
+    dequeue_interval_seconds: 10 
 
 sensors:
   use_threads: false # set true to apply num_workers config 
@@ -35,8 +36,8 @@ storage:
       hostname: localhost
       db_name: development_db
       port: 5432
-      username: dev_user
-      password: dev_user
+      username: dag_log 
+      password: dag_log 
 
 # set the directory that the LocalComputeLogManager writes stdout & stderr logs to
 compute_logs:

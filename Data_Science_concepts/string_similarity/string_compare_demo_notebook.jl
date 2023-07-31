@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.19
+# v0.19.26
 
 using Markdown
 using InteractiveUtils
@@ -24,6 +24,12 @@ include("string_similarity.jl");
 md"
 # Interactive Demo of a custom text fuzzy-matching algorithm
 "
+
+# ╔═╡ 7b2ba05a-37f9-480f-81df-fe63c521c27d
+md"## "
+
+# ╔═╡ ad9160a4-8d0a-4ce8-9994-64b49474ff6a
+TableOfContents()
 
 # ╔═╡ 0b728942-74b1-4e3a-bed6-4e69b0407842
 # naive equality, after stripping out spaces and standardizing letter-case
@@ -218,12 +224,18 @@ run_test(interactive_example, heuristic_isequal)
 # ╔═╡ 3889985e-df9c-4b28-a059-9ea57993a575
 run_test(interactive_example, isequal)
 
+# ╔═╡ c0303bcb-e1b3-4fc1-b912-4b00ebd47cea
+md"Modify below code cell to customize string_compare parameters applied to the above example"
+
 # ╔═╡ 15e559aa-c5a7-4f15-8de8-5cbcea6ffbdc
 # modify this code to see the influence of different parameters on your examples
-string_compare(text_1, text_2, 
-	strip=[" ", "-", ",", "."], 
-	keep_case=true, 
-	ignore_short=5 
+run_test(interactive_example,
+	(t1, t2) -> string_compare(
+		t1, t2, 
+		strip=[" ", "-", ",", "."], 
+		keep_case=true, 
+		ignore_short=2 
+	)
 )
 
 # ╔═╡ 2eabe02b-1f34-4789-a38d-b4162b47eb84
@@ -279,7 +291,7 @@ PlutoUI = "~0.7.49"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.4"
+julia_version = "1.9.1"
 manifest_format = "2.0"
 project_hash = "08cc58b1fbde73292d848136b97991797e6c5429"
 
@@ -308,7 +320,7 @@ version = "0.11.4"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.1+0"
+version = "1.0.2+0"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -379,7 +391,7 @@ version = "1.10.2+0"
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [[deps.LinearAlgebra]]
-deps = ["Libdl", "libblastrampoline_jll"]
+deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.Logging]]
@@ -397,14 +409,14 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
-version = "2.28.0+0"
+version = "2.28.2+0"
 
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2022.2.1"
+version = "2022.10.11"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
@@ -413,7 +425,7 @@ version = "1.2.0"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.20+0"
+version = "0.3.21+4"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
@@ -422,9 +434,9 @@ uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.5.2"
 
 [[deps.Pkg]]
-deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.8.0"
+version = "1.9.0"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -465,22 +477,28 @@ version = "1.0.1"
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.SparseArrays]]
-deps = ["LinearAlgebra", "Random"]
+deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+version = "1.9.0"
+
+[[deps.SuiteSparse_jll]]
+deps = ["Artifacts", "Libdl", "Pkg", "libblastrampoline_jll"]
+uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
+version = "5.10.1+6"
 
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
-version = "1.0.0"
+version = "1.0.3"
 
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-version = "1.10.1"
+version = "1.10.0"
 
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
@@ -506,12 +524,12 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.12+3"
+version = "1.2.13+0"
 
 [[deps.libblastrampoline_jll]]
-deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
+deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.1.1+0"
+version = "5.8.0+0"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -526,8 +544,10 @@ version = "17.4.0+0"
 
 # ╔═╡ Cell order:
 # ╟─2954b96f-5204-476c-a5ff-acf6d002bfe4
+# ╠═7b2ba05a-37f9-480f-81df-fe63c521c27d
 # ╠═e9e26fe7-a170-4481-941a-749f3a20bb2a
 # ╠═25fc2f12-8a34-11ed-00af-b19ec1200616
+# ╠═ad9160a4-8d0a-4ce8-9994-64b49474ff6a
 # ╠═0b728942-74b1-4e3a-bed6-4e69b0407842
 # ╠═3799d6a3-8e7a-44a7-b8a0-5d25202d52e7
 # ╟─97999dd8-6f8d-45fa-8529-9d35163a1950
@@ -537,7 +557,7 @@ version = "17.4.0+0"
 # ╠═4a7e55e6-542e-4a7d-b044-73fdc6edf8a4
 # ╟─12cc9658-62b8-4220-a45d-d876d1db33e5
 # ╟─66df1064-241d-47ac-b92a-a25fb777d26f
-# ╟─2ab6c97d-65af-457a-b1da-06ea2d46b664
+# ╠═2ab6c97d-65af-457a-b1da-06ea2d46b664
 # ╟─1f86bf60-68ba-4646-894f-06ef1c578fb0
 # ╟─8f0cb3a5-3802-4bc7-a77f-11f6a293eb71
 # ╠═4b88d235-7e64-4d88-9e28-7980355795b7
@@ -547,19 +567,19 @@ version = "17.4.0+0"
 # ╠═65fdccc2-67d8-4f83-a5b6-81d49272aac8
 # ╟─7d7af72c-cca3-4540-a15c-ce73d163cfc9
 # ╟─dd35dc9d-693f-4365-ac80-afefb58cf5c3
-# ╟─71515660-04ce-400c-97d8-37e366aa6fc5
-# ╟─980c5721-c897-42b5-8464-ea839102d923
-# ╟─cf6fd688-13e0-4c48-984b-01cf9eec91dc
+# ╠═71515660-04ce-400c-97d8-37e366aa6fc5
+# ╠═980c5721-c897-42b5-8464-ea839102d923
+# ╠═cf6fd688-13e0-4c48-984b-01cf9eec91dc
 # ╟─072d1b33-d176-4df2-9c2a-f91b1f0f98cc
-# ╟─6c3e6b66-f1fa-4b5d-943a-384c52fcab60
+# ╠═6c3e6b66-f1fa-4b5d-943a-384c52fcab60
 # ╠═4d8f0de7-9c35-46ab-b7c4-ec3ca5e81d5c
 # ╠═620be601-5953-4baf-9f8b-74d35fe801d3
 # ╟─4ff0967b-8ceb-453f-b6c3-51fd0cdc22a0
-# ╟─277f9397-30d1-4ae3-841f-aee4905a9ac6
+# ╠═277f9397-30d1-4ae3-841f-aee4905a9ac6
 # ╠═c2503166-68f4-4606-b306-b96a6f1cc9e6
 # ╠═da2ccc49-9e72-40f3-ac06-a1b1cbc33f50
 # ╟─f9c96933-42d7-4a2e-bd06-5f5f5f2c83ff
-# ╟─0704eb6d-d798-40f6-8ad1-bf4f9eff65f6
+# ╠═0704eb6d-d798-40f6-8ad1-bf4f9eff65f6
 # ╠═2012d0d7-b376-4c5e-95bd-f62d22849ecf
 # ╠═4d32eebb-4e3f-430e-a1e9-d117284c4ccf
 # ╟─fa4d9739-f11b-4952-bf2b-38c1b882c5b6
@@ -573,6 +593,7 @@ version = "17.4.0+0"
 # ╠═a0e12250-8941-4bad-9b54-23d752597f0f
 # ╠═5ed5ff29-667d-490c-9f8c-9913dddbae56
 # ╠═3889985e-df9c-4b28-a059-9ea57993a575
+# ╟─c0303bcb-e1b3-4fc1-b912-4b00ebd47cea
 # ╠═15e559aa-c5a7-4f15-8de8-5cbcea6ffbdc
 # ╟─2eabe02b-1f34-4789-a38d-b4162b47eb84
 # ╟─56cb357a-c691-4219-a28c-3b906b514446

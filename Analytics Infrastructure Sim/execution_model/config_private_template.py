@@ -1,6 +1,6 @@
 # config_private.py 
 
-local_proj_dir = 'C:/.../Sample-Projects/Analytics Infrastructure Sim/' 
+local_proj_dir = 'S:/.../Sample-Projects/Analytics Infrastructure Sim/' 
 
 # infrastructure 
 python_exe = 'S:/.../python.exe' 

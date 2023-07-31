@@ -1,6 +1,7 @@
 
 # another example implementation of the original
 # https://stackoverflow.com/questions/19123506/jaro-winkler-distance-algorithm-in-c-sharp/19165108#19165108
+# translated from the original string_compare implemented in Julia
 
 """
 Custom string fuzzy matching on a scale of [0, 1]
@@ -10,7 +11,23 @@ Empirically, random/independent strings ~0.40 on average, similar strings >0.85
 """
 import math
 
-def string_compare(s1, s2, verbose=False, strip=[" "], keep_case=False, ignore_short=4):
+def string_compare(s1, s2, 
+                   strip=[" "], keep_case=False, ignore_short=4, 
+                   verbose=False): 
+    """
+    Custom string fuzzy matching on a scale of [0, 1], where 0 => no similarity and 1 => exact match; loosely based on Jaro similarity: https://en.wikipedia.org/wiki/Jaro-Winkler_distance
+
+    \nParameters:
+    \n`s1`, `s2`: input strings to compare for similarity
+    \n`strip`: list of strings to be removed from the inputs, ie spaces or other non-informative characters, default removes spaces
+    \n`keep_case`: default false to ignore letter-case differences
+    \n`ignore_short`: default 4, upper bound on string length (after processing) where algorithm reverts to exact matching. This algorithm is designed for long, semi-structured strings (ie concatenated parts of a street address) and for 'short' strings even the most minimal difference (ie 'form' vs 'from') can reasonably be entirely different meanings
+    \n`verbose`: default false, set to true to output additional diagnostic details from execution
+    \n
+    \nEmpirically, random/independent strings ~0.40 on average, similar strings >0.85
+    \n
+    \nThis custom algorithm first implemented by Thomas Vandrus in Julia in 2021-03
+    """
     # Pre-Processing
     # remove spaces by default, allows arbitrary strings to be stripped away
     if len(strip) > 0:
@@ -27,8 +44,10 @@ def string_compare(s1, s2, verbose=False, strip=[" "], keep_case=False, ignore_s
         s1, s2 = s1.upper(), s2.upper()
     
     if verbose: # display processed strings
-        print(f"{l1} - {s1}")
-        print(f"{l2} - {s2}")
+        print("\n\nprocessed strings:")
+        print(f"{s1}")
+        print(f"{s2}")
+        print(f"processed lengths: {l1} and {l2}")
     
     # short circuit if above processing makes an exact match
     if s1 == s2:
@@ -50,7 +69,7 @@ def string_compare(s1, s2, verbose=False, strip=[" "], keep_case=False, ignore_s
         print(f"match dist - {mdist}")
     
     # order-sensitive match index of each character such that
-    #   (goose, pot) has only one match [2], [2] but
+    #   (goose, pot) has only one match [2], [2] and
     #   (goose, oolong) has two matches [1,2], [2,3]
     m1, m2 = [], []
     # m1 needed only for debugging
@@ -64,14 +83,13 @@ def string_compare(s1, s2, verbose=False, strip=[" "], keep_case=False, ignore_s
                 m1.append(i) 
                 m2.append(j) 
                 break
+
+    matches = len(m2)
     if verbose:
+        print(f"matches - {matches}")
         print(m1) 
         print(m2)
-    
-    matches = len(m2)
-    if verbose: 
-        print(f"matches - {matches}")
-    
+
     if matches == 0: 
         return 0
     elif matches == 1: 
@@ -82,10 +100,6 @@ def string_compare(s1, s2, verbose=False, strip=[" "], keep_case=False, ignore_s
             print(f"transposes - {transposes}")
         return round((matches / l1 + matches / l2 + (matches - transposes) / matches ) / 3, 3)
 
-s1 = "1313-123 Westcourt Place N2L 1B3"
-s2 = "Unit 1313 123 Westcourt Pl. N2L1B3"
-
-string_compare(s1, s2, verbose=True)
 
 """
 # basic scenario testing
@@ -105,26 +119,4 @@ s1 = "123 Falconridge Cres Kitchener ON N2K1B3"
 s2 = "123 Falconridge Crescent Kitchener ON N2K1B3"
 
 string_compare(s1, s2, verbose=true) 
-"""
-
-"""
-# performance testing
-using Random, StatsBase, Base.Threads
-
-string_compare("test", "string", verbose=true)
-
-n = 100000
-l = 100
-results = zeros(n)
-@time begin
-    @threads for i in 1:n
-        results[i] = string_compare(randstring("abcdefghijklmnopqrstuvwxyz0123456789 ", l),
-                                    randstring("abcdefghijklmnopqrstuvwxyz0123456789 ", l))
-    end
-end
-summarystats(results)
-
-# performance test: 100k comparisons of random 100-char strings
-# original: 10s, 257M alloc, 15 GiB, 40% gc
-# type annotated: 9s 150M alloc, 13 GiB, 40% gc
 """
