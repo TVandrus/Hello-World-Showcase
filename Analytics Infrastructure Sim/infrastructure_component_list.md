@@ -13,18 +13,14 @@ pgAdmin 4 v6.21
 
 ## Pipeline Scripting 
 Python
-    v3.10.10 as of 2023-03
+    v3.11.4 as of 2023-06
+    python -m pip install --upgrade pip
+    pip install --upgrade wheel
+    pip list 
 
-    $python = "S:/Python/Python_3_10/python.exe"; cls; .$python; 
-    .$python -m pip install --upgrade pip
-
-    $pip = "S:/Python/Python_3_10/Scripts/pip.exe" 
-    .$pip list 
-
-    .$pip install --upgrade wheel
-    .$pip install --upgrade dagster dagit dagster-postgres dbt-core dbt-postgres --find-links=https://github.com/dagster-io/build-grpcio/wiki/Wheels # issue with Python 3.11 & dagster & grpcio - 2023-03
-    .$pip install --upgrade SQLAlchemy  pyarrow fastparquet parquet pandas pyspark
-    .$pip install --upgrade scikit-learn xgboost juliacall 
+    pip install --upgrade "pandas[all]" pyarrow 
+    pip install --upgrade scikit-learn xgboost shap juliacall 
+    pip install --upgrade dagster dagit dagster-postgres dbt-postgres 
 
     import os 
     os.environ['PYTHON_JULIACALL_THREADS'] = '3'
@@ -34,15 +30,18 @@ Python
 
 ## Simulation/Analysis logic compute 
 Julia
-    v 1.8.4 
-    CSV
-    DataFrames.jl v1.3.6 
-    Pandas.jl v1.6.1
-    Parquet.jl
-    Pluto.jl v0.19.12 
+    v 1.9.2 as of 2023-07
 
-    PyCall.jl
-    ENV["PYTHON"] = "S:/Python/Python_3_10/python.exe"
+    Pluto v0.19.27
+    PlutoUI v0.7.52
+    DataFrames v1.6.1
+    CSV v0.10.11
+    Parquet v0.8.4
+    ShapML v0.3.2
+    XGBoost v2.3.1
+
+    PyCall v1.96.1
+    ENV["PYTHON"] = ".../Python/Python_311/python.exe"
 
 
 # Reference Docs
