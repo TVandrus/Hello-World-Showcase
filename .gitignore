@@ -1,6 +1,8 @@
 .vscode
-setup.ps1
+__pycache__/
 test_cargo/
+setup.ps1
+
 string_similarity_app/
 
 ux_input/

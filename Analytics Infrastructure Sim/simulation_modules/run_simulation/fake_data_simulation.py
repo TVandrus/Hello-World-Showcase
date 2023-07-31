@@ -4,17 +4,20 @@ import pandas as pd
 
 # create fake-data model for proof-of-concepts 
 """
-a - combined production data set
-b - 
-c - 
-d - 
-e - 
+a - 'contract' transactions 
+b - 'advisor' mapping 
+c - 'client' mapping 
+d - 'date' mapping 
+e - 'product' mapping 
 f - exhaustive data mapping 
 """
 
-dbt_seed_folder = ''
 
-n_a = 750
+dbt_seed_folder = ''
+if not os.path.exists(dbt_seed_folder):
+    os.makedirs(dbt_seed_folder) 
+
+n_a = 1000
 n_b = 100 
 n_c = 300 
 n_d = 1096 
@@ -89,6 +92,7 @@ for a in range(n_a):
 
 a_data = pd.DataFrame(a_list)
 a_data.head()
+
 
 # f 
 f_data = pd.merge(a_data, b_data, 'left', left_on='cont_adv_id', right_on='adv_id')
