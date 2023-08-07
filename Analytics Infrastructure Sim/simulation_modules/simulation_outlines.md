@@ -106,4 +106,41 @@ Analysis: determine unique individuals and store enriched records
     - attempt to de-noise and recreate original
     - query and display results
 
+## The Hungry Judge bakery
+Purpose: 
+    - large-scale transaction data 
+    - built from customer profiles, to reverse-engineer
+    - introduce fraudulent anomalies?
 
+Data: 
+    - https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_3_GettingStarted/Introduction.html
+    - transaction record/document/object:
+        transaction line-item ID (unique) 
+        transaction ID
+        transaction date-time
+        transaction processed location
+        client ID (based on pymt card number)
+        transaction line item(s) (product)
+        transaction item prices (per-product)
+
+    - Hungry Judge menu: 
+        coffee - Call to the Bar 
+        Powdered Wig beignets 
+        Apple-davit fritter
+        JustIce Lemon sorbet 
+        Summer-y Judgement fruit crumble
+        Chocolate Tort 
+
+    - underlying client purchasing profiles:
+        individual ID (census)
+        client pymt card (arbitrary mapping)
+        individual location (based on census)
+        individual purchase frequency (based on census occupation)
+        individual purchase habits (time, based on occupation)
+        individual product purchase-propensities (based on above)
+
+Analysis:
+    - simulate normalized line-item records 
+    - aggregate for transaction-level analysis 
+    - recover underlying purchasing profile 
+    - identify causal effects of individual characteristics on purchasing
