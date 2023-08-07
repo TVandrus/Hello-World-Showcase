@@ -43,21 +43,24 @@ function string_compare(s1::String, s2::String;
         s1, s2 = uppercase(s1), uppercase(s2)
     end
     if verbose # display processed strings
-        @info "$l1 - $s1"
-        @info "$l2 - $s2"
+        @info "\n\nprocessed strings: "
+        @info "$s1"
+        @info "$s2"
+        @info "processed lengths: $l1 and $l2"
     end
-    
-    if isequal(s1, s2) # short circuit if above processing makes an exact match
+    # short circuit if above processing makes an exact match
+    if isequal(s1, s2) 
         return 1
     end
-    if (l2 == 0) || (l2 <= ignore_short) # arbitrary decision that fuzzy matching of 'short' strings is not informative
+    if (l2 == 0) || (l2 <= ignore_short) 
+        # arbitrary decision that fuzzy matching of 'short' strings 
+        #   is not informative
         if verbose 
             @info "short string"
         end
         # already tested for exact matches
         return 0
     end
-
     # matching-window size
     #   original uses (max length ÷ 2) - 1
     #mdist = (l1 ÷ 2) - 1
@@ -66,13 +69,11 @@ function string_compare(s1::String, s2::String;
     if verbose
         @info "match dist - $mdist"
     end
-    
     # order-sensitive match index of each character such that
     #   (goose, pot) has only one match [2], [2] but
     #   (goose, oolong) has two matches [1,2], [2,3]
     m1::Array{Int}, m2::Array{Int} = [], []
     # m1 needed only for debugging
-
     for i::Int in 1:l1
         window_start::Int = max(1, i-mdist)
         window_end::Int = min(l2, i+mdist)
@@ -87,20 +88,16 @@ function string_compare(s1::String, s2::String;
             end
         end            
     end
-    if verbose
-        @info m1 
-        @info m2
-    end
-
     matches::Int = length(m2)
     if verbose
         @info "matches - $matches"
+        @info m1 
+        @info m2
     end
-
     if matches == 0
         return 0
     elseif matches == 1
-        # the 'else' condition for the general would return the same outcome
+        # the 'else' condition for the general case would return the same outcome
         # but this short-circuit skips the logic for transposes
         return round((1/l1 + 1/l2 + 1) / 3, digits=3)
     else
@@ -110,8 +107,9 @@ function string_compare(s1::String, s2::String;
         end
         return round(
             (matches / l1 + 
-            matches / l2 +
-            (matches - transposes) / matches ) / 3, digits=3)
+             matches / l2 +
+            (matches - transposes) / matches ) / 3
+            , digits=3)
     end    
 end
 

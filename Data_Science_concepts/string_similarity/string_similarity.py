@@ -1,4 +1,3 @@
-
 # another example implementation of the original
 # https://stackoverflow.com/questions/19123506/jaro-winkler-distance-algorithm-in-c-sharp/19165108#19165108
 # translated from the original string_compare implemented in Julia
@@ -34,8 +33,8 @@ def string_compare(s1, s2,
         for s in strip:
             s1 = s1.replace(s, "")
             s2 = s2.replace(s, "")
-    l1 = len(s1)
-    l2 = len(s2)
+
+    l1, l2 = len(s1), len(s2)
     if l1 < l2: # guarantee s1 is longest string
         s1, s2 = s2, s1
         l1, l2 = l2, l1
@@ -58,8 +57,10 @@ def string_compare(s1, s2,
         #   is not informative
         if verbose: 
             print("short string")
-            # already tested for exact matches
-            return 0
+        
+        # already tested for exact matches
+        return 0
+
     # matching-window size
     #   original uses (max length ÷ 2) - 1
     #mdist = (l1 ÷ 2) - 1
@@ -78,6 +79,7 @@ def string_compare(s1, s2,
         window_end = min(l2, i+mdist)
         if window_start > l2: 
             break
+
         for j in set(range(window_start, window_end)).difference(m2): 
             if s1[i] == s2[j]: 
                 m1.append(i) 
@@ -93,24 +95,25 @@ def string_compare(s1, s2,
     if matches == 0: 
         return 0
     elif matches == 1: 
+        # the 'else' condition for the general case would return the same outcome
+        # but this short-circuit skips the logic for transposes
         return round((1/l1 + 1/l2 + 1) / 3, 3)
     else: 
         transposes = sum([(m2[k-1] >= m2[k]) for k in range(1, matches)])
         if verbose:
             print(f"transposes - {transposes}")
-        return round((matches / l1 + matches / l2 + (matches - transposes) / matches ) / 3, 3)
+        
+        return round(
+            (matches / l1 + 
+             matches / l2 + 
+             (matches - transposes) / matches ) / 3
+             , 3)
 
 
 """
 # basic scenario testing
 s1 = "martha"
 s2 = "marhta"
-
-s1 = "Mr. John Smith"
-s2 = "John M Smith"
-
-s1 = "Julie S Morin"
-s2 = "Julie T Morin"
 
 s1 = "1313-123 Westcourt Place N2L 1B3"
 s2 = "Unit 1313 123 Westcourt Pl. N2L1B3"
