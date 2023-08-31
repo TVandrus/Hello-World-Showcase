@@ -19,28 +19,30 @@ log-path: "__local_artifacts__/dbt_logs"
 docs-paths: ["__local_artifacts/dbt_docs"]
 
 clean-targets: # directories to be removed by `dbt clean`
-    - "__local_artifacts__/compiled"
-    - "local_artifacts/dbt_packages"
+  - "__local_artifacts__/compiled"
+  - "__local_artifacts__/dbt_packages"
 
 seeds:
-  seed_data:
+  dbt_portable: 
     +enabled: true 
     +tags: "seed"
-    +schema: seed
+    +schema: src
 
 models:
-    dbt_portable:
-        calc:
-            +materialized: view
-            +schema: calc 
-        out:
-            +materialized: table
-            +schema: out
+  dbt_portable:
+    calc:
+      +materialized: view
+      +schema: calc 
+    out:
+      +materialized: table
+      +schema: out
 
 quoting:
-    database: true
-    schema: true
-    identifier: true
+  database: true
+  schema: true
+  identifier: true
 
 vars:
-    DBT_PROFILES_DIR: "."
+  DBT_PROFILES_DIR: "."
+  DBT_TARGET_PATH: "__local_artifacts__/dbt_compiled/"
+  DBT_LOG_PATH: "__local_artifacts__/dbt_logs/"

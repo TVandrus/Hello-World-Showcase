@@ -1,8 +1,8 @@
 version: 2 
 
 seeds: 
-  - name: a_contract
-  - name: b_advisor
+  - name: b_contract
+  - name: a_advisor
   - name: c_client
   - name: d_date
   - name: e_product

@@ -1,4 +1,4 @@
-import os, shutil, random, datetime 
+import os, random, datetime 
 import pandas as pd 
 
 
@@ -12,8 +12,8 @@ e - 'product' mapping
 f - exhaustive data mapping 
 """
 
-
-dbt_seed_folder = "SQL Implementations/dbt_portable/seed_data/"
+# assumed to execute with dbt_portable/ as working directory 
+dbt_seed_folder = "seed_data/"
 if not os.path.exists(dbt_seed_folder):
     os.makedirs(dbt_seed_folder) 
 
