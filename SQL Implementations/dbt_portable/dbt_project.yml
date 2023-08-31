@@ -1,0 +1,46 @@
+
+name: 'dbt_portable'
+version: '1.0.0'
+config-version: 2
+
+profile: 'portable'
+
+
+seed-paths: ["seed_data"]
+model-paths: ["models"]
+snapshot-paths: ["snapshots"]
+
+macro-paths: ["macros"]
+test-paths: ["macros/tests"]
+
+analysis-paths: ["analyses"]
+target-path: "__local_artifacts__/dbt_compiled"
+log-path: "__local_artifacts__/dbt_logs"
+docs-paths: ["__local_artifacts/dbt_docs"]
+
+clean-targets: # directories to be removed by `dbt clean`
+    - "__local_artifacts__/compiled"
+    - "local_artifacts/dbt_packages"
+
+seeds:
+  seed_data:
+    +enabled: true 
+    +tags: "seed"
+    +schema: seed
+
+models:
+    dbt_portable:
+        calc:
+            +materialized: view
+            +schema: calc 
+        out:
+            +materialized: table
+            +schema: out
+
+quoting:
+    database: true
+    schema: true
+    identifier: true
+
+vars:
+    DBT_PROFILES_DIR: "."

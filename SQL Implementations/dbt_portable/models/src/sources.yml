@@ -1,0 +1,12 @@
+version: 2 
+
+source: 
+  - name: 'src_seed'
+  - schema: src
+  - tables: 
+    - name: a_contract 
+    - name: b_advisor 
+    - name: c_client 
+    - name: d_date 
+    - name: e_product 
+    - name: f_combined 

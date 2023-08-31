@@ -13,7 +13,7 @@ f - exhaustive data mapping
 """
 
 
-dbt_seed_folder = ''
+dbt_seed_folder = "SQL Implementations/dbt_portable/seed_data/"
 if not os.path.exists(dbt_seed_folder):
     os.makedirs(dbt_seed_folder) 
 
@@ -101,3 +101,9 @@ f_data = pd.merge(f_data, e_data, 'left', left_on='cont_prod_id', right_on='prod
 f_data = pd.merge(f_data, d_data, 'left', left_on='cont_date', right_on='cal_date')
 f_data.head()
 
+a_data.to_csv(dbt_seed_folder+"a_contract.csv", encoding='utf-8', header=True, index=False)
+b_data.to_csv(dbt_seed_folder+"b_advisor.csv", encoding='utf-8', header=True, index=False)
+c_data.to_csv(dbt_seed_folder+"c_client.csv", encoding='utf-8', header=True, index=False)
+d_data.to_csv(dbt_seed_folder+"d_date.csv", encoding='utf-8', header=True, index=False)
+e_data.to_csv(dbt_seed_folder+"e_product.csv", encoding='utf-8', header=True, index=False)
+f_data.to_csv(dbt_seed_folder+"f_combined.csv", encoding='utf-8', header=True, index=False)

@@ -1,0 +1,7 @@
+
+portable:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: '__local_artifacts__/portable.duckdb'
