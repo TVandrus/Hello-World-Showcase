@@ -19,7 +19,7 @@ log-path: "__local_artifacts__/dbt_logs"
 docs-paths: ["__local_artifacts/dbt_docs"]
 
 clean-targets: # directories to be removed by `dbt clean`
-  - "__local_artifacts__/compiled"
+  - "__local_artifacts__/dbt_compiled"
   - "__local_artifacts__/dbt_packages"
 
 seeds:
