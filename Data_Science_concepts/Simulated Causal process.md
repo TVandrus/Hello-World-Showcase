@@ -193,7 +193,7 @@ record = shoot(arch, shot)
 ```
 
 ```julia
-using DataFrames
+using DataFrames, DuckDB 
 
 archers = [gen_archer() for i in 1:n_archers]
 shots = [gen_shot() for i in 1:n_shots]
@@ -204,5 +204,13 @@ for a in archers
     end
 end 
 df = DataFrame(records)
+```
+
+```julia
+db = DuckDB.open("__local_artifacts__/portable.duckdb")
+con = DuckDB.connect(db)con = DBInterface.connect(DuckDB.DB, ) 
+
+# query the database
+results = DBInterface.execute(con, "create table archery as from df")
 
 ```
