@@ -208,9 +208,9 @@ df = DataFrame(records)
 
 ```julia
 db = DuckDB.open("__local_artifacts__/portable.duckdb")
-con = DuckDB.connect(db)con = DBInterface.connect(DuckDB.DB, ) 
+con = DuckDB.connect(db)
 
 # query the database
-results = DBInterface.execute(con, "create table archery as from df")
-
+results = DBInterface.execute(con, "drop table if exists archery; create table archery as from df;")
 ```
+
