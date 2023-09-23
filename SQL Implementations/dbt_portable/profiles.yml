@@ -7,3 +7,5 @@ portable:
       database: portable 
       schema: prt 
       path: '__local_artifacts__/portable.duckdb'
+      extensions: 
+        - parquet 

@@ -9,7 +9,7 @@ Goal:
 
 ### DuckDB
 
-https://duckdb.org
+https://duckdb.org/why_duckdb
 
 - the spirit of SQLite: portable/in-process, minimal setup, minimal dependencies
 - implementation that enables easy performance on analytical workloads
@@ -20,7 +20,7 @@ https://duckdb.org/docs/archive/0.8.1/
 https://docs.getdbt.com/docs/core/connect-data-platform/duckdb-setup
 
 
-### dbt Resources:
+### dbt Resources:[Title](https://duckdb.org/)
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
 - Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
 - Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
@@ -45,15 +45,15 @@ pip show duckdb # no external dependencies!
  python "fake_data_simulation.py" # does require some basic Python packages 
  ``` 
 
-This should populate dbt_portable/seed_data/ with some CSV files representing fake data extracts, matching the list documented in seed.yml
+This should populate `dbt_portable/seed_data/`` with some CSV files representing fake data extracts, matching the list documented in seed.yml
 
 ```shell
 dbt debug # confirms connection to DuckDB target as specified in dbt profiles.yml
 dbt compile # check for dbt configuration errors 
 dbt seed # load seed files into DuckDB
 dbt build # executes all dbt nodes, materializing them in DuckDB 
-dbt docs generate # compiles template and any user-contributed doc strings for dbt's underlying Directed Acyclic Graph of nodes 
-dbt docs serve # open the auto-generated documentation in a web browser
+dbt docs generate # compiles dbt's underlying Directed Acyclic Graph of nodes, along with user-contributed and templated documentation
+dbt docs serve # open the auto-generated documentation in a web browser, allows for navigating the lineage of transformations
 ```
 
 Now you can also open your DB IDE, and view your active and functional SQL database.

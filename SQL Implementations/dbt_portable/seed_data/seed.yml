@@ -1,9 +1,0 @@
-version: 2 
-
-seeds: 
-  - name: b_contract
-  - name: a_advisor
-  - name: c_client
-  - name: d_date
-  - name: e_product
-  - name: f_combined

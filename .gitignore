@@ -1,5 +1,7 @@
 .vscode
 __pycache__/
+__local_artifacts__/
+.env
 test_cargo/
 setup.ps1
 

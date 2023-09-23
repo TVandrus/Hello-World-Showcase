@@ -4,8 +4,8 @@ import pandas as pd
 
 # create fake-data model for proof-of-concepts 
 """
-a - 'contract' transactions 
-b - 'advisor' mapping 
+a - 'advisor' mapping 
+b - 'contract' transactions 
 c - 'client' mapping 
 d - 'date' mapping 
 e - 'product' mapping 
@@ -17,24 +17,24 @@ dbt_seed_folder = "seed_data/"
 if not os.path.exists(dbt_seed_folder):
     os.makedirs(dbt_seed_folder) 
 
-n_a = 1000
-n_b = 100 
+n_a = 100
+n_b = 1000 
 n_c = 300 
 n_d = 1096 
 n_e = 7 
 
 
-# b 
-b_list = []
-for b in range(n_b):
-    b_record = {}
-    b_record['b_id'] = f"b_{b}" 
-    b_record['adv_id'] = random.randint(100001, 990000) 
-    b_record['adv_name'] = f"Adv_{b}" 
-    b_list.append(b_record)
+# a 
+a_list = []
+for a in range(n_a):
+    a_record = {}
+    a_record['a_id'] = f"a_{a}" 
+    a_record['adv_id'] = random.randint(100001, 990000) 
+    a_record['adv_name'] = f"Adv_{a}" 
+    a_list.append(a_record)
 
-b_data = pd.DataFrame(b_list)
-b_data.head()
+a_data = pd.DataFrame(a_list)
+a_data.head()
 
 
 # c 
@@ -77,33 +77,50 @@ e_data = pd.DataFrame(e_list)
 e_data.head()
 
 
-# a 
-a_list = []
-for a in range(n_a):
-    a_record = {}
-    a_record['a_id'] = f"a_{a}" 
-    a_record['cont_id'] = f"{chr(65 + random.randint(0, 5))}{random.randint(1111111,8888888)}" 
-    a_record['cont_adv_id'] = b_data.adv_id[random.randint(0, n_b-1)]
-    a_record['cont_own_id'] = c_data.clt_id[random.randint(0, n_c-1)]
-    a_record['cont_prod_id'] = e_data.prod_id[random.randint(0, n_e-1)]
-    a_record['cont_date'] = d_data.cal_date[random.randint(0, n_d-1)]
-    a_record['cont_amt'] = 1000 * random.randint(100, 1000)
-    a_list.append(a_record)
+# b 
+b_list = []
+for b in range(n_b):
+    b_record = {}
+    b_record['b_id'] = f"b_{b}" 
+    b_record['cont_id'] = f"{chr(65 + random.randint(0, 5))}{random.randint(1111111,8888888)}" 
+    b_record['cont_adv_id'] = a_data.adv_id[random.randint(0, n_a-1)]
+    b_record['cont_own_id'] = c_data.clt_id[random.randint(0, n_c-1)]
+    b_record['cont_prod_id'] = e_data.prod_id[random.randint(0, n_e-1)]
+    b_record['cont_date'] = d_data.cal_date[random.randint(0, n_d-1)]
+    b_record['cont_amt'] = 1000 * random.randint(100, 1000)
+    b_list.append(b_record)
 
-a_data = pd.DataFrame(a_list)
-a_data.head()
+b_data = pd.DataFrame(b_list)
+b_data.head()
 
 
 # f 
-f_data = pd.merge(a_data, b_data, 'left', left_on='cont_adv_id', right_on='adv_id')
+f_data = pd.merge(b_data, a_data, 'left', left_on='cont_adv_id', right_on='adv_id')
 f_data = pd.merge(f_data, c_data, 'left', left_on='cont_own_id', right_on='clt_id')
 f_data = pd.merge(f_data, e_data, 'left', left_on='cont_prod_id', right_on='prod_id')
 f_data = pd.merge(f_data, d_data, 'left', left_on='cont_date', right_on='cal_date')
 f_data.head()
 
-a_data.to_csv(dbt_seed_folder+"b_contract.csv", encoding='utf-8', header=True, index=False)
-b_data.to_csv(dbt_seed_folder+"a_advisor.csv", encoding='utf-8', header=True, index=False)
-c_data.to_csv(dbt_seed_folder+"c_client.csv", encoding='utf-8', header=True, index=False)
-d_data.to_csv(dbt_seed_folder+"d_date.csv", encoding='utf-8', header=True, index=False)
-e_data.to_csv(dbt_seed_folder+"e_product.csv", encoding='utf-8', header=True, index=False)
-f_data.to_csv(dbt_seed_folder+"f_combined.csv", encoding='utf-8', header=True, index=False)
+
+a_data.to_parquet(path=dbt_seed_folder+"a_advisor.parquet", engine='pyarrow', compression='zstd', index=False)
+b_data.to_parquet(path=dbt_seed_folder+"b_contract.parquet", engine='pyarrow', compression='zstd', index=False)
+c_data.to_parquet(path=dbt_seed_folder+"c_client.parquet", engine='pyarrow', compression='zstd', index=False)
+d_data.to_parquet(path=dbt_seed_folder+"d_date.parquet", engine='pyarrow', compression='zstd', index=False)
+e_data.to_parquet(path=dbt_seed_folder+"e_product.parquet", engine='pyarrow', compression='zstd', index=False)
+f_data.to_parquet(path=dbt_seed_folder+"f_combined.parquet", engine='pyarrow', compression='zstd', index=False)
+
+
+
+import duckdb as dd
+
+queries = [
+    "create schema portable.src;", 
+    "create table src.a_advisor as from 'seed_data/a_advisor.parquet';", 
+]
+
+duck = dd.connect(database="__local_artifacts__/portable.duckdb")
+for q in queries:
+    dd.sql(query=q)
+
+duck.close()
+
