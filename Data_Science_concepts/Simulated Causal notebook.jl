@@ -232,36 +232,27 @@ begin
 end
 
 # ╔═╡ be0eeeca-6f9a-4095-bcb9-7003bdeb67d0
-# ╠═╡ disabled = true
-#=╠═╡
 begin
 	db = DuckDB.open("__local_artifacts__/portable.duckdb")
 	#db = DuckDB.open(":memory:")
 end
-  ╠═╡ =#
 
 # ╔═╡ bc78fd0b-d741-4c3b-b0bf-07e1b11b11f0
-#=╠═╡
 	con = DuckDB.connect(db)
-  ╠═╡ =#
 
 # ╔═╡ 51db1f11-765b-4275-a11a-e35d66d27c81
-#=╠═╡
 begin
 	DBInterface.execute(con, "create schema if not exists sim;")
 	DBInterface.execute(con, "drop table if exists sim.archery;")
 	DuckDB.register_data_frame(con, df, "df_view")
 	DBInterface.execute(con, "create table sim.archery as select * from df_view;")
 end
-  ╠═╡ =#
 
 # ╔═╡ a61318ac-7d06-475b-abbb-a1a38f12adb4
-#=╠═╡
 begin
 	DuckDB.disconnect(con)
 	DuckDB.close(db)
 end
-  ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
