@@ -1,11 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.32
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ e08688d0-752f-11ee-150f-51ef33f03b0a
-using XGBoost, DuckDB, DataFrames, StatsBase
+using XGBoost, DuckDB, DataFrames, CategoricalArrays
 
 # ╔═╡ a4fdd2d9-fb27-401c-b99c-018f3df71eba
 db_loc = "__local_artifacts__/portable.duckdb";
@@ -21,14 +21,10 @@ begin
 end
 
 # ╔═╡ 9c47ef5c-184c-4b9d-bbae-6f6090eff314
-feature_df = DuckDB.toDataFrame(results)
+feature_df = DuckDB.toDataFrame(results);
 
-# ╔═╡ 03be7533-9866-4abe-82c8-444766f6de52
-# prepare features
-# Y 
-# T 
-# X 
-# split aux 1/2
+# ╔═╡ 53dbaa27-1254-44da-8b16-99bce522cce0
+feature_df.skill = categorical(feature_df.skill)
 
 # ╔═╡ 3b8a1037-ae56-4697-b559-d14b34cf337c
 Y = feature_df.:score;
@@ -45,8 +41,8 @@ x_cols = [
 	:wind, 
 ]
 
-# ╔═╡ e6ddcfda-10d5-4218-a4a0-1971a43bc4a8
-X = feature_df[!, x_cols];
+# ╔═╡ 9ad92de3-bc79-4565-984f-4371cfa0ba9f
+X = feature_df[!, x_cols]
 
 # ╔═╡ d8704407-b4f5-4851-b9bf-353d28a8f165
 begin
@@ -57,33 +53,33 @@ end
 # ╔═╡ 538bd9eb-4bf1-4353-8954-ac06767a802e
 # specify models
 # Y ~ X
-y_model_params = (
+Y_model_params = (
 	booster="gbtree", 
-	num_rounds=1, 
+	objective="binary:logistic",
+	tree_method="hist", 
+	num_round=1, 
 	eta=1, 
 	num_parallel_tree=200, 
 	subsample=0.66, 
 	sampling_method="uniform", 
 	max_depth=10, 
-	colsample_bynode="0.6", 
+	colsample_bynode=0.6, 
 	min_split_loss=0, 
 	min_child_weight=0, 
 	max_leaves=100, 
 	max_delta_step=Inf, 
 	reg_alpha=0, 
 	reg_lambda=0, 
-	tree_method="hist", 
 	max_bin=256, 
 	grow_policy="lossguide", 
-	max_cat_to_onehot=0, 
-	max_cat_threshold=10, 
+	#max_cat_to_onehot=0, 
 	nthread=2, 
-	verbosity=2,
+	verbosity=1,
 )
 
 # ╔═╡ 260cd818-e3c9-4383-bef8-cb5bce16ecbd
 # T ~ X 
-t_model_params = (
+T_model_params = (
 	booster="gbtree", 
 	num_rounds=1, 
 	eta=1, 
@@ -111,7 +107,7 @@ t_model_params = (
 # ϵY ~ ϵT
 resid_model_params = (
 	booster="gblinear", 
-	num_rounds=1, 
+	num_round=1, 
 	eta=1, 
 	reg_alpha=0, 
 	reg_lambda=0, 
@@ -119,14 +115,39 @@ resid_model_params = (
 	verbosity=2,
 )
 
+# ╔═╡ 55e74549-9894-4857-a28c-631d38968e6e
+df = DataFrame(randn(100,3), [:a, :b, :y])
+
+# ╔═╡ 819e795e-f0cc-481f-8555-0fc921968552
+# can accept tabular data, will keep feature names
+bst = xgboost((df[!, [:a, :b]], df.y))
+
+# ╔═╡ 8450409d-d0ac-4219-a38e-3c0e24873656
+# display importance statistics retaining feature names
+importancereport(bst)
+
+# ╔═╡ f9a3cbca-203b-4404-aa4d-2d2340f96366
+# return AbstractTrees.jl compatible tree objects describing the model
+trees(bst)
+
+# ╔═╡ 14e8b0b2-9544-487f-8ba3-c34ba4322ec4
+xgmodel = XGBoost.xgboost(DMatrix((feature_df[!, x_cols]), feature_df[!, :score]); Y_model_params...)
+
+# ╔═╡ 3007a68d-e3b7-404c-b492-6e0887ab8a7a
+trees(xgmodel)
+
 # ╔═╡ edde6e62-337a-4874-9979-fb7cabc46374
-function cross_train(X_train, T_train, Y_train, X_pred, T_pred, Y_pred, Y_model, T_model, resid_model) 
-# train Y_train ~ X_train 
-# train T_train ~ X_train 
-# pred Y_pred ~ X_pred 
-# pred T_pred ~ X_pred 
-# ϵY_pred ~ ϵT_pred
-# return ΔϵY_pred / ΔϵT_pred
+function cross_train(
+	X_train, T_train, Y_train, 
+	X_pred, T_pred, Y_pred, 
+	Y_model, T_model, resid_model) 
+	# train Y_train ~ X_train 
+	
+	# train T_train ~ X_train 
+	# pred Y_pred ~ X_pred 
+	# pred T_pred ~ X_pred 
+	# ϵY_pred ~ ϵT_pred
+	# return ΔϵY_pred / ΔϵT_pred
 end 
 
 # ╔═╡ 4e3bb76d-943a-4089-8f39-3e1a264a2ab0
@@ -140,15 +161,15 @@ end
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DuckDB = "d2f5444f-75bc-4fdf-ac35-56f514c445e1"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [compat]
+CategoricalArrays = "~0.10.8"
 DataFrames = "~1.6.1"
 DuckDB = "~0.8.1"
-StatsBase = "~0.34.2"
 XGBoost = "~2.3.2"
 """
 
@@ -156,9 +177,9 @@ XGBoost = "~2.3.2"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.2"
+julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "ef5f1a7ac88420ff2476ca8ba812e6d130e93db1"
+project_hash = "6fc20c2ba11f90999f5a2f3f659fef758258bee5"
 
 [[deps.AbstractTrees]]
 git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
@@ -191,6 +212,24 @@ deps = ["Artifacts", "CUDA_Driver_jll", "JLLWrappers", "LazyArtifacts", "Libdl",
 git-tree-sha1 = "b2574783166b4cfa384810b1e07ecd9e779bb637"
 uuid = "76a88914-d11a-5bdc-97e0-2f5a05c973a2"
 version = "0.9.1+0"
+
+[[deps.CategoricalArrays]]
+deps = ["DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
+git-tree-sha1 = "1568b28f91293458345dabba6a5ea3f183250a61"
+uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+version = "0.10.8"
+
+    [deps.CategoricalArrays.extensions]
+    CategoricalArraysJSONExt = "JSON"
+    CategoricalArraysRecipesBaseExt = "RecipesBase"
+    CategoricalArraysSentinelArraysExt = "SentinelArrays"
+    CategoricalArraysStructTypesExt = "StructTypes"
+
+    [deps.CategoricalArrays.weakdeps]
+    JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+    SentinelArrays = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
+    StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
 
 [[deps.Compat]]
 deps = ["UUIDs"]
@@ -243,12 +282,6 @@ version = "1.0.0"
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
-[[deps.DocStringExtensions]]
-deps = ["LibGit2"]
-git-tree-sha1 = "2fb1e02f2b635d0845df5d7c167fec4dd739b00d"
-uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
-version = "0.9.3"
-
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
@@ -293,11 +326,6 @@ uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 git-tree-sha1 = "0dc7b50b8d436461be01300fd8cd45aa0274b038"
 uuid = "41ab1584-1d38-5bbf-9106-f11c6c58b48f"
 version = "1.3.0"
-
-[[deps.IrrationalConstants]]
-git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
-uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
-version = "0.2.2"
 
 [[deps.IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
@@ -356,22 +384,6 @@ uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-
-[[deps.LogExpFunctions]]
-deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "7d6dd4e9212aebaeed356de34ccf262a3cd415aa"
-uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.26"
-
-    [deps.LogExpFunctions.extensions]
-    LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
-    LogExpFunctionsChangesOfVariablesExt = "ChangesOfVariables"
-    LogExpFunctionsInverseFunctionsExt = "InverseFunctions"
-
-    [deps.LogExpFunctions.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    ChangesOfVariables = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
-    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -464,6 +476,12 @@ git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "1.2.2"
 
+[[deps.Requires]]
+deps = ["UUIDs"]
+git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
+uuid = "ae029012-a4dd-5104-9daa-d747884805df"
+version = "1.3.0"
+
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
@@ -500,18 +518,6 @@ version = "0.6.7"
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 version = "1.9.0"
-
-[[deps.StatsAPI]]
-deps = ["LinearAlgebra"]
-git-tree-sha1 = "1ff449ad350c9c4cbc756624d6f8a8c3ef56d3ed"
-uuid = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
-version = "1.7.0"
-
-[[deps.StatsBase]]
-deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "1d77abd07f617c4868c33d4f5b9e1dbb2643c9cf"
-uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.34.2"
 
 [[deps.StringManipulation]]
 git-tree-sha1 = "46da2434b41f41ac3594ee9816ce5541c6096123"
@@ -618,15 +624,21 @@ version = "17.4.0+0"
 # ╠═a4fdd2d9-fb27-401c-b99c-018f3df71eba
 # ╠═ca89b3a5-529e-4a13-a59c-705aab63519d
 # ╠═9c47ef5c-184c-4b9d-bbae-6f6090eff314
-# ╟─03be7533-9866-4abe-82c8-444766f6de52
+# ╠═53dbaa27-1254-44da-8b16-99bce522cce0
 # ╠═3b8a1037-ae56-4697-b559-d14b34cf337c
 # ╠═ffe4249d-dcf3-4260-a3f8-7710279ad3c6
-# ╟─9df19072-bf82-4009-ab20-7c4a7f200d7d
-# ╠═e6ddcfda-10d5-4218-a4a0-1971a43bc4a8
+# ╠═9df19072-bf82-4009-ab20-7c4a7f200d7d
+# ╠═9ad92de3-bc79-4565-984f-4371cfa0ba9f
 # ╠═d8704407-b4f5-4851-b9bf-353d28a8f165
-# ╟─538bd9eb-4bf1-4353-8954-ac06767a802e
-# ╟─260cd818-e3c9-4383-bef8-cb5bce16ecbd
-# ╟─8b3f44d1-2252-4d82-aa72-ed6f89fad1dd
+# ╠═538bd9eb-4bf1-4353-8954-ac06767a802e
+# ╠═260cd818-e3c9-4383-bef8-cb5bce16ecbd
+# ╠═8b3f44d1-2252-4d82-aa72-ed6f89fad1dd
+# ╠═55e74549-9894-4857-a28c-631d38968e6e
+# ╠═819e795e-f0cc-481f-8555-0fc921968552
+# ╠═8450409d-d0ac-4219-a38e-3c0e24873656
+# ╠═f9a3cbca-203b-4404-aa4d-2d2340f96366
+# ╠═14e8b0b2-9544-487f-8ba3-c34ba4322ec4
+# ╠═3007a68d-e3b7-404c-b492-6e0887ab8a7a
 # ╠═edde6e62-337a-4874-9979-fb7cabc46374
 # ╠═4e3bb76d-943a-4089-8f39-3e1a264a2ab0
 # ╟─00000000-0000-0000-0000-000000000001

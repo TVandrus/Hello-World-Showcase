@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.32
 
 using Markdown
 using InteractiveUtils
@@ -235,21 +235,11 @@ end
 begin
 	db = DuckDB.open("__local_artifacts__/portable.duckdb")
 	#db = DuckDB.open(":memory:")
-end
-
-# ╔═╡ bc78fd0b-d741-4c3b-b0bf-07e1b11b11f0
 	con = DuckDB.connect(db)
-
-# ╔═╡ 51db1f11-765b-4275-a11a-e35d66d27c81
-begin
-	DBInterface.execute(con, "create schema if not exists sim;")
-	DBInterface.execute(con, "drop table if exists sim.archery;")
+	DuckDB.execute(con, "create schema if not exists sim;")
+	DuckDB.execute(con, "drop table if exists sim.archery;")
 	DuckDB.register_data_frame(con, df, "df_view")
-	DBInterface.execute(con, "create table sim.archery as select * from df_view;")
-end
-
-# ╔═╡ a61318ac-7d06-475b-abbb-a1a38f12adb4
-begin
+	DuckDB.execute(con, "create table sim.archery as select * from df_view;")
 	DuckDB.disconnect(con)
 	DuckDB.close(db)
 end
@@ -272,7 +262,7 @@ DuckDB = "~0.8.1"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.2"
+julia_version = "1.9.3"
 manifest_format = "2.0"
 project_hash = "85cc09dacd8bfae38c088235f290e3800f21f202"
 
@@ -783,8 +773,5 @@ version = "17.4.0+0"
 # ╟─dc0af8a9-e344-41f8-a559-3db98fce2a81
 # ╟─ca12076e-0bb7-4ef6-b61a-12f5a2333e93
 # ╠═be0eeeca-6f9a-4095-bcb9-7003bdeb67d0
-# ╠═bc78fd0b-d741-4c3b-b0bf-07e1b11b11f0
-# ╠═51db1f11-765b-4275-a11a-e35d66d27c81
-# ╠═a61318ac-7d06-475b-abbb-a1a38f12adb4
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
