@@ -55,9 +55,9 @@ https://docs.getdbt.com/reference/dbt_project.yml
 # PowerShell Shortcuts
 
 ```powershell
-$pip = "S:/Python/Python_3_10/Scripts/pip.exe" 
-$python = "S:/Python/Python_3_10/python.exe"; cls; .$python; 
-$julia = "S:/Julia/Julia-1.8.5/bin/julia.exe"; cls; .$julia; 
-$dbt = "S:/Python/Python_3_10/Scripts/dbt.exe" 
-$dagit = "S:/Python/Python_3_10/Scripts/dagit.exe" 
+$pip = "S:/Python/Python_3_11/Scripts/pip.exe" 
+$python = "S:/Python/Python_3_11/python.exe"; cls; .$python; 
+$julia = "S:/Julia/Julia-1.9.2/bin/julia.exe"; cls; .$julia; 
+$dbt = "S:/Python/Python_3_11/Scripts/dbt.exe" 
+$dagit = "S:/Python/Python_3_11/Scripts/dagit.exe" 
 ```

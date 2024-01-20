@@ -9,7 +9,7 @@
             + extend the set of possible operations
         While minimizing any instances of:
             - modifying existing code
-            - code repitition
+            - code repetition
             - unhandled runtime error types
 
         --Mads Torgersen, "The Expression Problem Revisited"
@@ -171,16 +171,26 @@
     end
 
     """
-    Would iPoint3D traditionally 'inherit' from Point? iPoint? Point3D?
-
+    Would/should iPoint3D traditionally 'inherit' from Point? iPoint? Point3D?
+    Answer for multiple-dispatch: it doesn't matter during development, re-use what's available and just implement more specialized behaviour when desired
+        best to default to the abstract type and let the compiler decide when the function is called
     """
 
 
     struct nDimPoint <: AbstractPoint
         data::AbstractDict{Symbol, Number}
-        nDimPoint(dims, vals) = length(dims) == length(vals) ? new(dims, vals) : error("number of dims does not match vals")
+        nDimPoint(dims::Vector{Symbol}, vals::Vector{Number}) = length(dims) == length(vals) ? new(Dict(dims .=> vals)) : error("number of dims does not match vals")
+        nDimPoint(data::AbstractDict) = new()
     end
+    """
+    A new type, for more generalized behaviour than the 'original' Point
+    Point did not need to consider more than 2 dimensions, and nDimPoint is not constrained by the implementation of Point
+    but nDimPoint can re-use Point functionality
+    """
+    P6 = nDimPoint([:x, :y], [1,1])
 
+    move_up(P6)
+    
     function transform(x::nDimPoint, field::Symbol, op::Function)
         fns = fieldnames(T)
         if field in fns

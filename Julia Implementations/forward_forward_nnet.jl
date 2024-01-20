@@ -52,13 +52,30 @@ end
 
 sse = y -> sum(y .^ 2)
 
-function learn_forward_forward(Y, X, model::NNet, learn_rate::Float64)::Tuple{NNet, Number}
-"""
+learn_defaults = (
+    epochs::Int = 100, 
+    learn_rate::Float64 = 0.8,
 
+)
+
+function learn_forward_forward(Y, X, model::NNet, learn_params)::Tuple{NNet, Number}
+"""
 
 """
 
 # 
 
-
 end
+
+ff_nnet_test = NNet(
+    :classification, 
+    [0, 1],
+    [10, 32, 12],
+    0.5,
+    x->max(x, 0),
+    sse,
+    Dict(1=>randn(6, 10), 
+        2=>randn(10, 32),
+        3=>randn(32, 12)
+    )
+)
