@@ -124,20 +124,38 @@ Data:
         transaction item prices (per-product)
 
     - Hungry Judge menu: 
-        coffee - Call to the Bar 
+        Call to the Bar (coffee)
         Powdered Wig beignets 
         Apple-davit fritter
         JustIce Lemon sorbet 
         Summer-y Judgement fruit crumble
         Chocolate Tort 
+        Limousine Crash (Tourte Limousine)
+        Judge Judy Chocolate Chili brownie
+        The Truth (Brownie w white, dark, milk chocolate)
+        The Whole Truth (The Truth Brownie ice cream sandwich)
+        Nothing But the Truth (simple, decadent brownie)
+        Trial by Jury (flight of seasonal ice cream flavours)
+        The Elle Woods (strawberry ice cream topped w pink champagne macaron)
+        Jury of your Beers (flight of local craft beers)
+        Guilty Plea (...)
+        Not Guilty (Kale salad w cesaer viniagrette)
 
     - underlying client purchasing profiles:
         individual ID (census)
         client pymt card (arbitrary mapping)
-        individual location (based on census)
+        individual location (based on census occupation or address)
         individual purchase frequency (based on census occupation)
         individual purchase habits (time, based on occupation)
         individual product purchase-propensities (based on above)
+    
+    - simulation logic:
+        for each date, client
+            location based on either home or occupation
+            generate spending limit, based on zero-truncated Normal, mean shifted based on "small order" or "large order" profile
+            morning, midday, or evening timestamp
+            randomly add items to order while under spending limit
+
 
 Analysis:
     - simulate normalized line-item records 
