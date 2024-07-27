@@ -119,7 +119,7 @@ function find_split(data::AbstractDataFrame; nsplitvars::Int=ncol(data), lossfn:
         end
     end
 
-    return best #split details
+    return best #tuple of split details
 end
 
 function grow_tree(tree::Dict{String, Node}, data::AbstractDataFrame, obs::Vector{Int}, selfID::String, max_tree_depth::Int, min_leaf_size::Int; 
